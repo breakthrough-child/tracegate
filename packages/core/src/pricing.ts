@@ -16,11 +16,7 @@ export const DEFAULT_PRICES: PriceTable = {
   'mock-small': { input: 0.25, output: 1.25 },
 };
 
-export function costOf(
-  table: PriceTable,
-  model: string,
-  usage?: { input_tokens: number; output_tokens: number },
-): number | undefined {
+export function costOf(table: PriceTable, model: string, usage?: { input_tokens: number; output_tokens: number }): number | undefined {
   if (!usage) return undefined;
   const key = Object.keys(table)
     .sort((a, b) => b.length - a.length)

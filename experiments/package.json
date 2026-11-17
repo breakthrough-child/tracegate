@@ -1,0 +1,12 @@
+{
+  "name": "tracegate-experiments",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@tracegate/core": "workspace:*",
+    "@tracegate/adapters": "workspace:*",
+    "support-agent-example": "workspace:*",
+    "yaml": "^2.6.0"
+  }
+}

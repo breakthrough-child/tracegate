@@ -472,7 +472,7 @@
   category: knowledge
   tags:
     - rag
-  input: Can I cancel my order before it ships? cancel policy
+  input: Can my order be cancelled before it ships?
   expected:
     tools:
       - name: search_kb

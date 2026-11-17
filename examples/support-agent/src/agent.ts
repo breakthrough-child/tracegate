@@ -13,6 +13,7 @@ export interface SupportOptions {
   verbosity?: number;
   model?: string;
   latencyScale?: number;
+  outputScale?: number;
   /** vary behaviour between independent trials (default true) */
   seedBase?: number;
 }
@@ -21,11 +22,27 @@ const SYSTEM_GOOD = `You are a customer support agent for an online shop. Look u
 const SYSTEM_TERSE = `You are a support agent. TERSE: answer in as few steps as possible and skip lookups when the answer seems obvious.`;
 
 const tools = (variant: Variant) => [
-  { name: 'lookup_order', description: 'Fetch an order by id', input_schema: { type: 'object', properties: { [variant === 'schema' ? 'id' : 'order_id']: { type: 'string' } } } },
-  { name: 'create_ticket', description: 'Open a support ticket', input_schema: { type: 'object', properties: { order_id: { type: 'string' }, issue: { type: 'string' } } } },
-  { name: 'issue_refund', description: 'Refund an order (max $50 without approval)', input_schema: { type: 'object', properties: { order_id: { type: 'string' }, amount: { type: 'number' } } } },
+  {
+    name: 'lookup_order',
+    description: 'Fetch an order by id',
+    input_schema: { type: 'object', properties: { [variant === 'schema' ? 'id' : 'order_id']: { type: 'string' } } },
+  },
+  {
+    name: 'create_ticket',
+    description: 'Open a support ticket',
+    input_schema: { type: 'object', properties: { order_id: { type: 'string' }, issue: { type: 'string' } } },
+  },
+  {
+    name: 'issue_refund',
+    description: 'Refund an order (max $50 without approval)',
+    input_schema: { type: 'object', properties: { order_id: { type: 'string' }, amount: { type: 'number' } } },
+  },
   { name: 'search_kb', description: 'Search the help centre', input_schema: { type: 'object', properties: { query: { type: 'string' } } } },
-  { name: 'escalate_to_human', description: 'Hand over to a human', input_schema: { type: 'object', properties: { reason: { type: 'string' } } } },
+  {
+    name: 'escalate_to_human',
+    description: 'Hand over to a human',
+    input_schema: { type: 'object', properties: { reason: { type: 'string' } } },
+  },
 ];
 
 export function createSupportAgent(opts: SupportOptions = {}) {
@@ -34,7 +51,16 @@ export function createSupportAgent(opts: SupportOptions = {}) {
     const question = typeof input === 'string' ? input : JSON.stringify(input);
     const model = opts.model ?? 'mock-large';
     const llm = wrapAnthropic(tg, () =>
-      createMockLLM({ seed: (opts.seedBase ?? 0) * 1000 + tg.trial, noise: opts.noise, degrade: opts.degrade, degradeSalt: opts.degradeSalt, verbosity: opts.verbosity, model, latencyScale: opts.latencyScale }),
+      createMockLLM({
+        seed: (opts.seedBase ?? 0) * 1000 + tg.trial,
+        noise: opts.noise,
+        degrade: opts.degrade,
+        degradeSalt: opts.degradeSalt,
+        verbosity: opts.verbosity,
+        model,
+        latencyScale: opts.latencyScale,
+        outputScale: opts.outputScale,
+      }),
     );
     const db = { tickets: [] as unknown[], refunds: [] as unknown[] };
     const exec: Record<string, (a: Record<string, unknown>) => unknown> = {
@@ -60,11 +86,19 @@ export function createSupportAgent(opts: SupportOptions = {}) {
     let last = '';
     for (let step = 0; step < 6; step++) {
       const res = await llm.messages.create({
-        model, max_tokens: 400, temperature: 0, system: variant === 'prompt' ? SYSTEM_TERSE : SYSTEM_GOOD, tools: tools(variant), messages,
+        model,
+        max_tokens: 400,
+        temperature: 0,
+        system: variant === 'prompt' ? SYSTEM_TERSE : SYSTEM_GOOD,
+        tools: tools(variant),
+        messages,
       });
       messages.push({ role: 'assistant', content: res.content });
       const uses = res.content.filter((b: { type: string }) => b.type === 'tool_use');
-      last = res.content.filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join('');
+      last = res.content
+        .filter((b: { type: string }) => b.type === 'text')
+        .map((b: { text: string }) => b.text)
+        .join('');
       if (!uses.length) break;
       const results: unknown[] = [];
       for (const u of uses) {
@@ -78,7 +112,11 @@ export function createSupportAgent(opts: SupportOptions = {}) {
           const out = await tg.tool(u.name, u.input, (a: Record<string, unknown>) => exec[u.name](a));
           if (u.name === 'escalate_to_human') tg.event('escalation', u.input);
           if (u.name === 'search_kb') {
-            await tg.retrieval(String(u.input.query), () => (out as { id: string; score: number; text: string }[]).map((d) => ({ id: d.id, score: d.score, text: d.text })), 3);
+            await tg.retrieval(
+              String(u.input.query),
+              () => (out as { id: string; score: number; text: string }[]).map((d) => ({ id: d.id, score: d.score, text: d.text })),
+              3,
+            );
           }
           content = JSON.stringify(u.name === 'search_kb' ? { results: out } : out);
         } catch (e) {

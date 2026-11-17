@@ -1,0 +1,14 @@
+dist
+node_modules
+.tracegate
+examples/support-agent/.tracegate
+examples/support-agent/baselines
+docs/samples
+docs/img
+experiments/results
+pnpm-lock.yaml
+python
+*.md
+*.yaml
+*.yml
+*.json

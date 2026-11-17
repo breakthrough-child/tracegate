@@ -1,0 +1,16 @@
+{
+  "name": "support-agent",
+  "created": "2026-11-17T16:39:57.599Z",
+  "dataset": "examples/support-agent/dataset.yaml",
+  "mode": "live",
+  "trials": 3,
+  "git_sha": "88e0ffd",
+  "simulated": true,
+  "meta": {
+    "agent": "support-agent",
+    "model": "mock-large",
+    "prompt_version": "good",
+    "simulated": true,
+    "git_sha": "88e0ffd"
+  }
+}

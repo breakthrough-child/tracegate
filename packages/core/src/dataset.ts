@@ -8,7 +8,11 @@ export function loadDataset(file: string): Case[] {
   const text = readFileSync(file, 'utf8');
   const ext = extname(file).toLowerCase();
   let data: unknown;
-  if (ext === '.jsonl') data = text.split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l));
+  if (ext === '.jsonl')
+    data = text
+      .split('\n')
+      .filter((l) => l.trim())
+      .map((l) => JSON.parse(l));
   else if (ext === '.json') data = JSON.parse(text);
   else data = YAML.parse(text);
   const cases = (Array.isArray(data) ? data : (data as { cases?: unknown })?.cases) as Case[] | undefined;
@@ -31,7 +35,11 @@ export function validateDataset(cases: Case[]): DatasetProblem[] {
     for (const t of c.expected?.tools ?? []) if (!t.name) out.push({ case: id, message: 'expected tool without name' });
     const rx = [c.expected?.answer?.regex].filter(Boolean) as string[];
     for (const r of rx) {
-      try { new RegExp(r); } catch { out.push({ case: id, message: `invalid regex /${r}/` }); }
+      try {
+        new RegExp(r);
+      } catch {
+        out.push({ case: id, message: `invalid regex /${r}/` });
+      }
     }
   });
   return out;

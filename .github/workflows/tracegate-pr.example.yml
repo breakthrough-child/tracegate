@@ -1,0 +1,20 @@
+# Example: gate every pull request with a free, deterministic replay-mode check.
+# Copy to .github/workflows/tracegate.yml in your own repo.
+name: Tracegate
+on: [pull_request]
+permissions: { contents: read, pull-requests: write }
+jobs:
+  agent-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci && npm run build
+      - uses: OWNER/tracegate/action@v0
+        with:
+          agent: dist/agent.js
+          dataset: tracegate/dataset.yaml
+          baseline: main            # committed with `tracegate baseline update`
+          cassette: main-recording  # recorded run set committed under .tracegate/runs/ (strict replay: no network, no cost)
+          trials: "3"

@@ -15,35 +15,70 @@ export interface DashboardRun {
 }
 export interface DashboardData {
   generated: string;
-  runsets: { name: string; created: string; git_sha?: string; simulated?: boolean; mode?: string; summary: Summary; cases: RunsetResults['cases'] }[];
+  runsets: {
+    name: string;
+    created: string;
+    git_sha?: string;
+    simulated?: boolean;
+    mode?: string;
+    summary: Summary;
+    cases: RunsetResults['cases'];
+  }[];
   comparisons: Record<string, Comparison>;
   runs: DashboardRun[];
 }
 
 /** Collect everything the dashboard needs from a store. Comparisons are precomputed for the latest runsets. */
-export function buildDashboardData(store: Store, opts: { tolerance?: number; maxCompared?: number; maxRunsWithEvents?: number } = {}): DashboardData {
+export function buildDashboardData(
+  store: Store,
+  opts: { tolerance?: number; maxCompared?: number; maxRunsWithEvents?: number } = {},
+): DashboardData {
   const names = store.listRunsets().filter((n) => store.readResults(n));
-  const sets = names.map((n) => ({ n, r: store.readResults(n)!, m: store.readManifest(n) })).sort((a, b) => a.r.created.localeCompare(b.r.created));
-  const runsets = sets.map(({ n, r, m }) => ({ name: n, created: r.created, git_sha: m?.git_sha, simulated: m?.simulated, mode: m?.mode, summary: summarize(r), cases: r.cases }));
+  const sets = names
+    .map((n) => ({ n, r: store.readResults(n)!, m: store.readManifest(n) }))
+    .sort((a, b) => a.r.created.localeCompare(b.r.created));
+  const runsets = sets.map(({ n, r, m }) => ({
+    name: n,
+    created: r.created,
+    git_sha: m?.git_sha,
+    simulated: m?.simulated,
+    mode: m?.mode,
+    summary: summarize(r),
+    cases: r.cases,
+  }));
   const comparisons: Record<string, Comparison> = {};
   const recent = sets.slice(-(opts.maxCompared ?? 8));
-  for (const a of recent) for (const b of recent) if (a !== b) comparisons[`${a.n}|${b.n}`] = compare(a.r, b.r, { tolerance: opts.tolerance });
+  for (const a of recent)
+    for (const b of recent) if (a !== b) comparisons[`${a.n}|${b.n}`] = compare(a.r, b.r, { tolerance: opts.tolerance });
   const runs: DashboardRun[] = [];
   let withEvents = 0;
   const cap = opts.maxRunsWithEvents ?? 200;
   for (const { n, r } of sets) {
     let loaded: Run[] | undefined;
-    for (const c of r.cases) for (const t of c.trials) {
-      const row: DashboardRun = { runset: n, run_id: t.run_id, case_id: c.case_id, trial: t.trial, pass: t.pass, status: t.status, cost_usd: t.cost_usd, latency_ms: t.latency_ms, failures: t.failures };
-      if (withEvents < cap) {
-        try {
-          loaded ??= store.loadRuns(n);
-          row.events = loaded.find((x) => x.run_id === t.run_id)?.events;
-          withEvents++;
-        } catch { /* traces may be absent for baseline-only result files */ }
+    for (const c of r.cases)
+      for (const t of c.trials) {
+        const row: DashboardRun = {
+          runset: n,
+          run_id: t.run_id,
+          case_id: c.case_id,
+          trial: t.trial,
+          pass: t.pass,
+          status: t.status,
+          cost_usd: t.cost_usd,
+          latency_ms: t.latency_ms,
+          failures: t.failures,
+        };
+        if (withEvents < cap) {
+          try {
+            loaded ??= store.loadRuns(n);
+            row.events = loaded.find((x) => x.run_id === t.run_id)?.events;
+            withEvents++;
+          } catch {
+            /* traces may be absent for baseline-only result files */
+          }
+        }
+        runs.push(row);
       }
-      runs.push(row);
-    }
   }
   return { generated: new Date().toISOString(), runsets, comparisons, runs };
 }
@@ -65,7 +100,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':
 const fx = (x, d = 3) => (Number.isFinite(x) ? (Math.abs(x) >= 100 ? x.toFixed(0) : x.toFixed(d)) : 'n/a');
 const pc = (x) => (Number.isFinite(x) ? (x * 100).toFixed(1) + '%' : 'n/a');
 const money = (x) => '$' + (x < 0.01 ? x.toFixed(5) : x.toFixed(3));
-const state = { tab: 'overview', a: null, b: null, run: null, set: null, filter: {} };
+const state = { tab: (location.hash || '#overview').slice(1), a: null, b: null, run: null, set: null, filter: {} };
 const sets = D.runsets;
 $('#gen').textContent = 'Generated ' + D.generated + ' · ' + sets.length + ' run set(s)' + (sets.some((s) => s.simulated) ? ' · includes SIMULATED (mock model) runs' : '');
 if (sets.length) { state.set = sets[sets.length - 1].name; state.b = state.set; state.a = (sets[sets.length - 2] || sets[sets.length - 1]).name; }

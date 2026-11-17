@@ -4,7 +4,8 @@ import { esc, f, money, page, pct } from './util.js';
 import { viewText } from './view.js';
 
 function tracePair(a?: Run, b?: Run): string {
-  const col = (r?: Run, label = '') => `<div><b>${label}</b>${r ? `<pre>${esc(viewText(r))}</pre>` : '<p class="mut">(no trace)</p>'}</div>`;
+  const col = (r?: Run, label = '') =>
+    `<div><b>${label}</b>${r ? `<pre>${esc(viewText(r))}</pre>` : '<p class="mut">(no trace)</p>'}</div>`;
   return `<div class="cols">${col(a, 'baseline')}${col(b, 'candidate')}</div>`;
 }
 
@@ -22,15 +23,31 @@ function scatter(c: Comparison): string {
 }
 
 /** Self-contained HTML compare report (no server, no external assets). */
-export function renderCompareHtml(c: Comparison, opts: { check?: CheckResult; baselineRuns?: Run[]; candidateRuns?: Run[]; title?: string } = {}): string {
+export function renderCompareHtml(
+  c: Comparison,
+  opts: { check?: CheckResult; baselineRuns?: Run[]; candidateRuns?: Run[]; title?: string } = {},
+): string {
   const fmtFor = (n: string) => (n === 'cost_usd' ? money : n === 'latency_ms' ? (x: number) => Math.round(x) + ' ms' : f);
-  const verdictCls = (m: Comparison['metrics'][number]) => (m.verdict === 'regression' ? 'bad' : m.verdict === 'improvement' ? 'good' : m.verdict === 'insufficient_data' ? 'warn' : 'mut');
-  const metricRows = c.metrics.map((m) => `<tr><td>${esc(m.name)}</td><td>${fmtFor(m.name)(m.baseline)}</td><td>${fmtFor(m.name)(m.candidate)}</td><td>${m.diff.diff >= 0 ? '+' : ''}${f(m.diff.diff)} <span class="mut">(${f(m.diff.lo)}, ${f(m.diff.hi)})</span></td><td>${f(m.diff.p)}</td><td>${f(m.diff.effect_size, 2)}</td><td class="${verdictCls(m)}">${esc(m.verdict.replace(/_/g, ' '))}${lowerIsBetter(m.name) ? ' <span class="mut">(lower is better)</span>' : ''}</td></tr>`).join('');
+  const verdictCls = (m: Comparison['metrics'][number]) =>
+    m.verdict === 'regression' ? 'bad' : m.verdict === 'improvement' ? 'good' : m.verdict === 'insufficient_data' ? 'warn' : 'mut';
+  const metricRows = c.metrics
+    .map(
+      (m) =>
+        `<tr><td>${esc(m.name)}</td><td>${fmtFor(m.name)(m.baseline)}</td><td>${fmtFor(m.name)(m.candidate)}</td><td>${m.diff.diff >= 0 ? '+' : ''}${f(m.diff.diff)} <span class="mut">(${f(m.diff.lo)}, ${f(m.diff.hi)})</span></td><td>${f(m.diff.p)}</td><td>${f(m.diff.effect_size, 2)}</td><td class="${verdictCls(m)}">${esc(m.verdict.replace(/_/g, ' '))}${lowerIsBetter(m.name) ? ' <span class="mut">(lower is better)</span>' : ''}</td></tr>`,
+    )
+    .join('');
   const bRuns = new Map((opts.baselineRuns ?? []).filter((r) => r.trial === 0).map((r) => [r.case_id, r]));
   const cRuns = new Map((opts.candidateRuns ?? []).filter((r) => r.trial === 0).map((r) => [r.case_id, r]));
   const changed = c.changes.filter((x) => x.kind !== 'unchanged');
-  const caseRows = changed.map((x) => `<details><summary><span class="pill ${x.kind === 'regressed' ? 'bad' : x.kind === 'improved' ? 'good' : 'warn'}">${x.kind}</span> <code>${esc(x.case_id)}</code> ${pct(x.baseline_pass_rate)} → ${pct(x.candidate_pass_rate)} <span class="mut">${esc(x.category ?? '')}</span></summary>${x.failures.length ? `<p class="bad">${x.failures.map(esc).join('<br>')}</p>` : ''}${tracePair(bRuns.get(x.case_id), cRuns.get(x.case_id))}</details>`).join('');
-  const findings = opts.check ? `<h2>Gate: ${opts.check.ok ? '<span class="good">passed</span>' : '<span class="bad">failed</span>'}</h2><ul>${opts.check.findings.map((x) => `<li class="${x.level === 'fail' ? 'bad' : x.level === 'warn' ? 'warn' : 'mut'}">${esc(x.kind)}: ${esc(x.message)}</li>`).join('')}</ul>` : '';
+  const caseRows = changed
+    .map(
+      (x) =>
+        `<details><summary><span class="pill ${x.kind === 'regressed' ? 'bad' : x.kind === 'improved' ? 'good' : 'warn'}">${x.kind}</span> <code>${esc(x.case_id)}</code> ${pct(x.baseline_pass_rate)} → ${pct(x.candidate_pass_rate)} <span class="mut">${esc(x.category ?? '')}</span></summary>${x.failures.length ? `<p class="bad">${x.failures.map(esc).join('<br>')}</p>` : ''}${tracePair(bRuns.get(x.case_id), cRuns.get(x.case_id))}</details>`,
+    )
+    .join('');
+  const findings = opts.check
+    ? `<h2>Gate: ${opts.check.ok ? '<span class="good">passed</span>' : '<span class="bad">failed</span>'}</h2><ul>${opts.check.findings.map((x) => `<li class="${x.level === 'fail' ? 'bad' : x.level === 'warn' ? 'warn' : 'mut'}">${esc(x.kind)}: ${esc(x.message)}</li>`).join('')}</ul>`
+    : '';
   const body = `<h1>${esc(opts.title ?? 'Tracegate comparison')}</h1><p class="mut">${esc(c.baseline.name)} (baseline) vs ${esc(c.candidate.name)} (candidate) · ${c.n_paired} paired cases · ${c.baseline.trials_per_case} / ${c.candidate.trials_per_case} trials per case</p>
 ${findings}${c.notes.map((n) => `<p class="warn">${esc(n)}</p>`).join('')}
 <h2>Headline metrics</h2><table><tr><th>metric</th><th>baseline</th><th>candidate</th><th>diff (95% paired-bootstrap CI)</th><th>p</th><th>effect size d<sub>z</sub></th><th>verdict</th></tr>${metricRows}</table>

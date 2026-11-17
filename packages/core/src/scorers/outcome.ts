@@ -8,7 +8,7 @@ export const outcomeScorer: Scorer = {
     if (!name) return na('outcome');
     const fn = outcomes[name];
     if (!fn) return { name: 'outcome', score: 0, pass: false, details: `outcome check "${name}" is not registered in config.outcomes` };
-    let ok = false;
+    let ok: boolean;
     try {
       ok = await fn(run.state, run, c);
     } catch (e) {
@@ -41,6 +41,14 @@ export const behaviorScorer: Scorer = {
     ];
     if (!want) return [...out, na('behavior_correct')];
     const ok = want === 'escalate' ? esc : want === 'refuse' ? ref : !esc && !ref;
-    return [...out, { name: 'behavior_correct', score: ok ? 1 : 0, pass: ok, details: ok ? undefined : `expected behaviour "${want}" (escalated=${esc}, refused=${ref})` }];
+    return [
+      ...out,
+      {
+        name: 'behavior_correct',
+        score: ok ? 1 : 0,
+        pass: ok,
+        details: ok ? undefined : `expected behaviour "${want}" (escalated=${esc}, refused=${ref})`,
+      },
+    ];
   },
 };

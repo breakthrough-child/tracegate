@@ -92,7 +92,13 @@ export const faithfulnessScorer: Scorer = {
       .filter(Boolean)
       .join('\n---\n');
     if (!ctxText) return { name: 'faithfulness', score: null, pass: true, details: 'no chunk text available (skipped)' };
-    const v = await judgeAnswer(judge, 'Pass only if EVERY factual claim in the answer is supported by the CONTEXT. Fail on any unsupported claim.', typeof c.input === 'string' ? c.input : JSON.stringify(c.input), answerText(run), ctxText);
+    const v = await judgeAnswer(
+      judge,
+      'Pass only if EVERY factual claim in the answer is supported by the CONTEXT. Fail on any unsupported claim.',
+      typeof c.input === 'string' ? c.input : JSON.stringify(c.input),
+      answerText(run),
+      ctxText,
+    );
     return { name: 'faithfulness', score: v.pass ? 1 : 0, pass: v.pass, required: false, details: v.pass ? undefined : v.reasoning };
   },
 };

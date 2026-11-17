@@ -1,0 +1,92 @@
+{
+  "generated": "2026-11-17T16:51:31.859Z",
+  "node": "v22.22.3",
+  "simulated": true,
+  "dataset_cases": 40,
+  "experiment": "judge calibration and position-swap machinery",
+  "real_judge_evaluated": false,
+  "judge": "SIMULATED, known error rates",
+  "labels": "ground truth by construction, not human-annotated",
+  "items": 76,
+  "calibration": [
+    {
+      "injected_flip_rate": 0,
+      "expected_agreement": 1,
+      "measured_mean_agreement": 1,
+      "measured_mean_kappa": 1,
+      "n_items": 76,
+      "repeats": 20
+    },
+    {
+      "injected_flip_rate": 0.05,
+      "expected_agreement": 0.95,
+      "measured_mean_agreement": 0.9565789473684211,
+      "measured_mean_kappa": 0.9131578947368422,
+      "n_items": 76,
+      "repeats": 20
+    },
+    {
+      "injected_flip_rate": 0.1,
+      "expected_agreement": 0.9,
+      "measured_mean_agreement": 0.9039473684210526,
+      "measured_mean_kappa": 0.8078947368421053,
+      "n_items": 76,
+      "repeats": 20
+    },
+    {
+      "injected_flip_rate": 0.2,
+      "expected_agreement": 0.8,
+      "measured_mean_agreement": 0.7960526315789473,
+      "measured_mean_kappa": 0.5921052631578948,
+      "n_items": 76,
+      "repeats": 20
+    },
+    {
+      "injected_flip_rate": 0.3,
+      "expected_agreement": 0.7,
+      "measured_mean_agreement": 0.6940789473684211,
+      "measured_mean_kappa": 0.3881578947368421,
+      "n_items": 76,
+      "repeats": 20
+    }
+  ],
+  "position_swap": [
+    {
+      "injected_position_bias_toward_A": 0,
+      "pairs": 400,
+      "accuracy_without_swap": 0.955,
+      "accuracy_with_swap": 0.915,
+      "share_verdicts_flagged_order_dependent": 0.0825,
+      "share_ties_after_swap": 0.0825,
+      "accuracy_among_decided_with_swap": 0.997275204359673
+    },
+    {
+      "injected_position_bias_toward_A": 0.2,
+      "pairs": 400,
+      "accuracy_without_swap": 0.8675,
+      "accuracy_with_swap": 0.7125,
+      "share_verdicts_flagged_order_dependent": 0.275,
+      "share_ties_after_swap": 0.275,
+      "accuracy_among_decided_with_swap": 0.9827586206896551
+    },
+    {
+      "injected_position_bias_toward_A": 0.4,
+      "pairs": 400,
+      "accuracy_without_swap": 0.765,
+      "accuracy_with_swap": 0.54,
+      "share_verdicts_flagged_order_dependent": 0.4525,
+      "share_ties_after_swap": 0.4525,
+      "accuracy_among_decided_with_swap": 0.9863013698630136
+    }
+  ],
+  "not_measured": [
+    "agreement of any real LLM judge with human labels (no API key available)",
+    "effect of rubric wording on a real judge (needs a real judge)"
+  ],
+  "wilson_example_for_n": {
+    "estimate": 0.8947368421052632,
+    "lo": 0.805798558740362,
+    "hi": 0.945689387392982,
+    "n": 76
+  }
+}

@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tracegate-py"
+version = "0.1.0"
+description = "Record Anthropic / OpenAI client calls and tool calls into Tracegate's JSONL trace format"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["tracegate*"]

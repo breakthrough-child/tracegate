@@ -9,8 +9,16 @@ import { loopScorer } from './trajectory.js';
 import type { Scorer } from './util.js';
 
 export const BUILTIN_SCORERS: Scorer[] = [
-  toolScorer, answerScorer, judgeScorer, safetyScorer, loopScorer,
-  retrievalScorer, citationScorer, faithfulnessScorer, outcomeScorer, behaviorScorer,
+  toolScorer,
+  answerScorer,
+  judgeScorer,
+  safetyScorer,
+  loopScorer,
+  retrievalScorer,
+  citationScorer,
+  faithfulnessScorer,
+  outcomeScorer,
+  behaviorScorer,
 ];
 
 export * from './util.js';

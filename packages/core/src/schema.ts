@@ -24,17 +24,56 @@ export const TRACE_EVENT_SCHEMA = {
   $id: 'https://tracegate.dev/schemas/trace-event.json',
   oneOf: [
     ev('run_start', { case_id: { type: 'string' }, trial: { type: 'integer' }, input: {}, meta: { type: 'object' } }, ['input']),
-    ev('model_call', {
-      provider: { type: 'string' }, model: { type: 'string' }, params: { type: 'object' }, request: {}, response: {},
-      usage, cost_usd: { type: 'number' }, latency_ms: { type: 'number' }, retries: { type: 'integer' }, error: { type: 'string' },
-    }, ['provider', 'model', 'request', 'latency_ms']),
-    ev('tool_call', { name: { type: 'string' }, args: {}, result: {}, error: { type: 'string' }, duration_ms: { type: 'number' } }, ['name', 'args', 'duration_ms']),
-    ev('retrieval', {
-      query: { type: 'string' }, k: { type: 'integer' }, latency_ms: { type: 'number' },
-      results: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, score: { type: 'number' }, text_hash: { type: 'string' }, text: { type: 'string' } }, required: ['id'] } },
-    }, ['query', 'results']),
+    ev(
+      'model_call',
+      {
+        provider: { type: 'string' },
+        model: { type: 'string' },
+        params: { type: 'object' },
+        request: {},
+        response: {},
+        usage,
+        cost_usd: { type: 'number' },
+        latency_ms: { type: 'number' },
+        retries: { type: 'integer' },
+        error: { type: 'string' },
+      },
+      ['provider', 'model', 'request', 'latency_ms'],
+    ),
+    ev('tool_call', { name: { type: 'string' }, args: {}, result: {}, error: { type: 'string' }, duration_ms: { type: 'number' } }, [
+      'name',
+      'args',
+      'duration_ms',
+    ]),
+    ev(
+      'retrieval',
+      {
+        query: { type: 'string' },
+        k: { type: 'integer' },
+        latency_ms: { type: 'number' },
+        results: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { id: { type: 'string' }, score: { type: 'number' }, text_hash: { type: 'string' }, text: { type: 'string' } },
+            required: ['id'],
+          },
+        },
+      },
+      ['query', 'results'],
+    ),
     ev('event', { name: { type: 'string' }, data: {} }, ['name']),
-    ev('run_end', { status: { enum: ['ok', 'error', 'replay_mismatch'] }, output: {}, state: {}, error: { type: 'string' }, duration_ms: { type: 'number' } }, ['status', 'duration_ms']),
+    ev(
+      'run_end',
+      {
+        status: { enum: ['ok', 'error', 'replay_mismatch'] },
+        output: {},
+        state: {},
+        error: { type: 'string' },
+        duration_ms: { type: 'number' },
+      },
+      ['status', 'duration_ms'],
+    ),
   ],
 };
 
@@ -55,15 +94,40 @@ export const CASE_SCHEMA = {
       type: 'object',
       additionalProperties: false,
       properties: {
-        tools: { type: 'array', items: { type: 'object', required: ['name'], properties: { name: { type: 'string' }, args: { type: 'object', additionalProperties: matcher }, optional: { type: 'boolean' } }, additionalProperties: false } },
+        tools: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['name'],
+            properties: {
+              name: { type: 'string' },
+              args: { type: 'object', additionalProperties: matcher },
+              optional: { type: 'boolean' },
+            },
+            additionalProperties: false,
+          },
+        },
         forbidden_tools: { type: 'array', items: { type: 'string' } },
         order: { enum: ['strict', 'any'] },
         max_extra_calls: { type: 'integer', minimum: 0 },
         answer: {
-          type: 'object', additionalProperties: false,
-          properties: { exact: { type: 'string' }, contains: { type: 'array', items: { type: 'string' } }, not_contains: { type: 'array', items: { type: 'string' } }, regex: { type: 'string' }, json_schema: { type: 'object' }, judge: { type: 'string' } },
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            exact: { type: 'string' },
+            contains: { type: 'array', items: { type: 'string' } },
+            not_contains: { type: 'array', items: { type: 'string' } },
+            regex: { type: 'string' },
+            json_schema: { type: 'object' },
+            judge: { type: 'string' },
+          },
         },
-        retrieval: { type: 'object', required: ['gold'], additionalProperties: false, properties: { gold: { type: 'array', items: { type: 'string' } }, k: { type: 'integer', minimum: 1 }, gains: { type: 'object' } } },
+        retrieval: {
+          type: 'object',
+          required: ['gold'],
+          additionalProperties: false,
+          properties: { gold: { type: 'array', items: { type: 'string' } }, k: { type: 'integer', minimum: 1 }, gains: { type: 'object' } },
+        },
         citations: { type: 'boolean' },
         outcome: { type: 'string' },
         behavior: { enum: ['answer', 'refuse', 'escalate'] },

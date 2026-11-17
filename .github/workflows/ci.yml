@@ -1,0 +1,46 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm lint
+      - run: pnpm exec vitest run
+      - run: python3 -m unittest discover -s python/tracegate-py/tests
+  example-gate:
+    # Runs the support-agent example with NO API key: the mock model makes it free and deterministic.
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile && pnpm build
+      - name: Replay-mode gate on the unchanged agent (must pass)
+        run: |
+          node packages/cli/dist/bin.js -c examples/support-agent/tracegate.config.mjs replay --cassette support-agent --agent examples/support-agent/dist/entry.js --name candidate --trials 3 --dataset examples/support-agent/dataset.yaml
+          node packages/cli/dist/bin.js -c examples/support-agent/tracegate.config.mjs check --baseline support-agent --candidate candidate
+        env: { SUPPORT_VARIANT: good }
+      - name: The broken variant must be caught (the step passes only when the gate FAILS)
+        run: |
+          node packages/cli/dist/bin.js -c examples/support-agent/tracegate.config.mjs run --agent examples/support-agent/dist/entry.js --name broken --trials 3 --dataset examples/support-agent/dataset.yaml
+          if node packages/cli/dist/bin.js -c examples/support-agent/tracegate.config.mjs check --baseline support-agent --candidate broken --out tracegate-comment.md --html tracegate-report.html; then echo "gate should have failed"; exit 1; fi
+        env: { SUPPORT_VARIANT: prompt }
+      - name: Build the dashboard bundle
+        run: node packages/cli/dist/bin.js -c examples/support-agent/tracegate.config.mjs ui --export tracegate-dashboard.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tracegate-example-reports
+          path: |
+            tracegate-comment.md
+            tracegate-report.html
+            tracegate-dashboard.html

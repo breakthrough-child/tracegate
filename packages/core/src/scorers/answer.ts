@@ -19,7 +19,7 @@ export const answerScorer: Scorer = {
     for (const s of a.not_contains ?? []) check(!text.toLowerCase().includes(s.toLowerCase()), `answer contains forbidden "${s}"`);
     if (a.regex) check(new RegExp(a.regex, 'i').test(text), `answer does not match /${a.regex}/`);
     if (a.json_schema) {
-      let ok = false;
+      let ok: boolean;
       try {
         const v = typeof run.output === 'string' ? JSON.parse(run.output) : run.output;
         const validate = new Ajv({ allErrors: true, strict: false }).compile(a.json_schema);

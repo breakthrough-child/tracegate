@@ -1,0 +1,28 @@
+# Measuring agent regressions under noise: a short research note
+
+*Status: engineering note on a tool with no outside users yet. Every number below comes from a **simulated** agent (a rule-based mock model), saved in `experiments/results/`. No real model was evaluated.*
+
+## Motivation
+When an agent's prompt, model or tool schema changes, how do you know it got worse? The usual answer is to run the new version once and look. Agent runs are non-deterministic, so that comparison mixes real change with noise, and a CI check built on it either cries wolf or learns to be ignored. Tracegate records runs, replays them offline, scores them, and applies a paired statistical test before failing a build.
+
+## The problem of noise
+Ten independent runs of one unchanged simulated agent (40 cases, 5 trials each; a 5% chance per model call of a behavioural slip) gave a single-trial pass rate between 0.925 and 1.000 (mean 0.958, sd 0.026). Averaging 5 trials per case cut the spread to sd 0.010. On average 6.7 of 40 cases flipped between pass and fail inside a single run, so a one-run comparison cannot tell a flaky case from a regressed one.
+
+## Method
+The unit of analysis is the *case*; trials are averaged within it and intervals come from a bootstrap over cases. Two runs on the same cases are compared with a paired bootstrap on per-case differences and an exact McNemar test on discordant pass/fail cases. The gate flags a regression only if the 95% interval for the difference is entirely below zero and the drop is at least a tolerance (0.02). With fewer than 10 paired cases it reports "insufficient data". The statistics are implemented from scratch and tested against hand-computed values (for example McNemar b=2, c=10 gives p = 158/4096).
+
+## Experiments (all simulated)
+1. **False regressions.** Comparing 300 pairs of *identical* agents, a naive "single-run pass rate dropped" rule fired in 37.7% of pairs (95% CI 32.4–43.3%). The paired bootstrap fired in 2.7% (1.4–5.2%) with 5 trials and 2.0% (0.9–4.3%) with a single trial; exact McNemar alone never fired (0/300). Most of the improvement came from the paired test, not from extra trials.
+2. **Sensitivity.** Injecting a degraded prompt that changes behaviour on 5%, 10% and 20% of cases produced real pass-rate drops of 2.4, 7.1 and 11.8 points. Detection (60 replications) was 7–10% for the smallest, 28–48% for the middle one, and 43% (1 trial) rising to 97% (10 trials) for the largest. With 40 cases, a seven-point drop was missed more than half the time even with 10 trials: case-sampling variance, not trial noise, was the limit.
+3. **Judge reliability.** No API key was available, so no real judge was evaluated. Using a simulated judge with *injected* error and position-bias rates, the calibration command recovered the injected agreement (0.96, 0.90, 0.80, 0.69 for 5/10/20/30% flips) and position swapping converted order-dependent verdicts into flagged ties. This validates the measurement machinery only. Labels were correct-versus-corrupted answers constructed by me, not human annotations. The effect of rubric wording was **not measured**.
+4. **Cost of rigor.** Spend scales linearly with trials (1×, 3.0×, 5.0×, 10.1× for 1, 3, 5, 10 trials; simulated token counts and an illustrative price table). Replaying a recording made zero model calls (262 when recording, 0 when replaying).
+5. **Budget gates under noise.** With identical agents and a 5% relative tolerance, a naive single-run threshold fired falsely on mean cost in 3.3% of 150 pairs and on p95 latency in 13.3%; the paired, multi-trial check fired in 0 of 150 for both. When I injected real cost increases (a model emitting more output tokens), a +3% rise, which is under the tolerance, tripped the naive rule 25% of the time and the paired check 3%; at a +7% rise the naive rule fired 87% and the paired check 98%; at +14% both fired every time. Cost noise in this simulation is small, so real-model false-alarm rates are probably higher; that is unmeasured.
+
+## What surprised me
+That extra trials were not what removed false alarms; pairing the comparison was. And that, at this dataset size, adding trials past three or five helped little for mid-sized regressions while adding cases would have.
+
+## Why I think the design is right, and where it is weak
+The gate is deliberately conservative: it would rather miss a small regression than block a good change on noise, and it says "insufficient data" instead of guessing when there are fewer than ten paired cases. Experiment 2 shows what that buys (about 3% false alarms against about 38%) and experiment 3 shows what it costs (a seven-point drop is missed more often than it is caught at 40 cases). A team that cares more about recall than precision can lower the tolerance or add cases; the tool reports intervals so that choice is visible rather than hidden in a threshold. Replay mode covers a different failure: code around the model changing. It makes no model calls, so it can run on every pull request, but it cannot say whether a rewritten prompt makes the real model worse.
+
+## Limits and open questions
+One simulated agent, one noise model, 40 cases; the 5% slip rate is an assumption, and real models differ in noise structure, so the false-positive and power figures may not transfer. Latency and cost noise in the simulation is far smaller than a real API's. Open questions: how much real LLM noise looks like this? How well do judges calibrated on 40 labels generalise? What is the right correction when many metrics are gated? How should a gate handle a hosted model that changes between baseline and candidate? These need real-model runs, which I have not yet done.

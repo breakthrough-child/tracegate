@@ -27,7 +27,7 @@ export const stdev = (xs: number[]): number => Math.sqrt(variance(xs));
 /** Linear-interpolation quantile (type 7, the R/NumPy default). */
 export function quantile(xs: number[], q: number): number {
   if (!xs.length) return NaN;
-  const s = [...xs].sort((a, b) => a - b);
+  const s = Float64Array.from(xs).sort();
   const pos = (s.length - 1) * q;
   const lo = Math.floor(pos);
   const hi = Math.ceil(pos);
@@ -57,10 +57,26 @@ export function bootstrapCI(
   if (n < 2) return { estimate, lo: estimate, hi: estimate, n };
   const r = rng(seed);
   const draws: number[] = [];
-  for (let b = 0; b < iters; b++) {
-    const pooled: number[] = [];
-    for (let i = 0; i < n; i++) pooled.push(...groups[Math.floor(r() * n)]);
-    draws.push(stat(pooled));
+  if (stat === mean) {
+    // fast path: no allocation, uses per-case sums and counts
+    const sums = groups.map((g) => g.reduce((a, b) => a + b, 0));
+    const cnts = groups.map((g) => g.length);
+    for (let b = 0; b < iters; b++) {
+      let s = 0;
+      let c = 0;
+      for (let i = 0; i < n; i++) {
+        const j = Math.floor(r() * n);
+        s += sums[j];
+        c += cnts[j];
+      }
+      draws.push(c ? s / c : NaN);
+    }
+  } else {
+    for (let b = 0; b < iters; b++) {
+      const pooled: number[] = [];
+      for (let i = 0; i < n; i++) for (const x of groups[Math.floor(r() * n)]) pooled.push(x);
+      draws.push(stat(pooled));
+    }
   }
   return { estimate, lo: quantile(draws, alpha / 2), hi: quantile(draws, 1 - alpha / 2), n };
 }
@@ -92,11 +108,7 @@ export interface PairedDiff {
  * The p-value is a bootstrap p-value for H0: mean diff = 0, via bootstrapping the
  * mean-centred differences (Efron & Tibshirani, ch. 16).
  */
-export function pairedBootstrap(
-  a: number[],
-  b: number[],
-  opts: { iters?: number; alpha?: number; seed?: number } = {},
-): PairedDiff {
+export function pairedBootstrap(a: number[], b: number[], opts: { iters?: number; alpha?: number; seed?: number } = {}): PairedDiff {
   if (a.length !== b.length) throw new Error('pairedBootstrap: length mismatch');
   const { iters = 4000, alpha = 0.05, seed = 7 } = opts;
   const d = a.map((x, i) => b[i] - x);
@@ -136,8 +148,8 @@ function logGamma(x: number): number {
   // Lanczos approximation
   const g = 7;
   const c = [
-    0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
-    12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7,
+    0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905,
+    -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7,
   ];
   if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - logGamma(1 - x);
   x -= 1;

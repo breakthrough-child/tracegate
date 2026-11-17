@@ -74,7 +74,14 @@ export class AgentContext {
     this.emit({ type: 'run_start', case_id: this.case.id, trial: this.trial, input, meta: this.o.meta });
   }
   end(r: { status: 'ok' | 'error' | 'replay_mismatch'; output?: unknown; error?: string }): void {
-    this.emit({ type: 'run_end', status: r.status, output: r.output, state: this.state, error: r.error, duration_ms: Date.now() - this.startMs });
+    this.emit({
+      type: 'run_end',
+      status: r.status,
+      output: r.output,
+      state: this.state,
+      error: r.error,
+      duration_ms: Date.now() - this.startMs,
+    });
   }
 
   /** Snapshot the resulting state (database rows, created tickets) for outcome scorers. */
@@ -95,8 +102,15 @@ export class AgentContext {
       if (!rec) throw new Error('replay mode without a cassette');
       const call = rec.next(this.modelIdx++, opts.request, opts.provider, opts.model);
       this.emit({
-        type: 'model_call', provider: opts.provider, model: opts.model, params: opts.params, request: opts.request,
-        response: call.response, usage: call.usage, cost_usd: call.cost_usd, latency_ms: call.latency_ms,
+        type: 'model_call',
+        provider: opts.provider,
+        model: opts.model,
+        params: opts.params,
+        request: opts.request,
+        response: call.response,
+        usage: call.usage,
+        cost_usd: call.cost_usd,
+        latency_ms: call.latency_ms,
       });
       return structuredClone(call.response) as Res;
     }
@@ -107,9 +121,16 @@ export class AgentContext {
         const usage = opts.usage?.(res);
         const sim = (res as { __latency_ms?: number } | null)?.__latency_ms;
         this.emit({
-          type: 'model_call', provider: opts.provider, model: opts.model, params: opts.params, request: opts.request,
-          response: res, usage, cost_usd: costOf(this.prices, opts.model, usage),
-          latency_ms: sim ?? Date.now() - t0, retries: retries || undefined,
+          type: 'model_call',
+          provider: opts.provider,
+          model: opts.model,
+          params: opts.params,
+          request: opts.request,
+          response: res,
+          usage,
+          cost_usd: costOf(this.prices, opts.model, usage),
+          latency_ms: sim ?? Date.now() - t0,
+          retries: retries || undefined,
         });
         return res;
       } catch (err) {
@@ -118,8 +139,14 @@ export class AgentContext {
           continue;
         }
         this.emit({
-          type: 'model_call', provider: opts.provider, model: opts.model, params: opts.params, request: opts.request,
-          latency_ms: Date.now() - t0, retries: retries || undefined, error: String((err as Error)?.message ?? err),
+          type: 'model_call',
+          provider: opts.provider,
+          model: opts.model,
+          params: opts.params,
+          request: opts.request,
+          latency_ms: Date.now() - t0,
+          retries: retries || undefined,
+          error: String((err as Error)?.message ?? err),
         });
         throw err;
       }
@@ -145,9 +172,13 @@ export class AgentContext {
     const t0 = Date.now();
     const results = await fn();
     this.emit({
-      type: 'retrieval', query, k: k ?? results.length, latency_ms: Date.now() - t0,
+      type: 'retrieval',
+      query,
+      k: k ?? results.length,
+      latency_ms: Date.now() - t0,
       results: results.map((r) => ({
-        id: r.id, score: r.score,
+        id: r.id,
+        score: r.score,
         text_hash: r.text_hash ?? (r.text !== undefined ? sha(r.text) : undefined),
         text: this.o.storeChunkText ? r.text : undefined,
       })),

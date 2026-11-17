@@ -81,13 +81,7 @@ export interface RunEndEvent extends BaseEvent {
   error?: string;
   duration_ms: number;
 }
-export type TraceEvent =
-  | RunStartEvent
-  | ModelCallEvent
-  | ToolCallEvent
-  | RetrievalEvent
-  | CustomEvent
-  | RunEndEvent;
+export type TraceEvent = RunStartEvent | ModelCallEvent | ToolCallEvent | RetrievalEvent | CustomEvent | RunEndEvent;
 
 export interface Run {
   run_id: string;

@@ -13,6 +13,7 @@ export async function indexToSqlite(store: Store, file: string): Promise<{ runs:
   const insEv = db.prepare('INSERT INTO events VALUES (?,?,?,?,?,?,?,?)');
   let runs = 0;
   let events = 0;
+  db.exec('BEGIN');
   for (const name of store.listRunsets()) {
     for (const r of store.loadRuns(name)) {
       let cost = 0;
@@ -26,9 +27,13 @@ export async function indexToSqlite(store: Store, file: string): Promise<{ runs:
         }
         const en = e as unknown as Record<string, unknown>;
         insEv.run(
-          name, r.run_id, e.id, e.type,
+          name,
+          r.run_id,
+          e.id,
+          e.type,
           (en.name as string) ?? (en.model as string) ?? null,
-          e.ts, (en.latency_ms as number) ?? (en.duration_ms as number) ?? null,
+          e.ts,
+          (en.latency_ms as number) ?? (en.duration_ms as number) ?? null,
           JSON.stringify(e),
         );
         events++;
@@ -37,6 +42,7 @@ export async function indexToSqlite(store: Store, file: string): Promise<{ runs:
       runs++;
     }
   }
+  db.exec('COMMIT');
   db.close();
   return { runs, events };
 }

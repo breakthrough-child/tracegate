@@ -34,8 +34,15 @@ export async function runDataset(o: RunOptions): Promise<{ runs: number; mismatc
   rmSync(o.store.runsetDir(o.name), { recursive: true, force: true });
   mkdirSync(o.store.runsetDir(o.name), { recursive: true });
   o.store.writeManifest(o.name, {
-    name: o.name, created: new Date().toISOString(), dataset: o.dataset, mode, trials,
-    git_sha: o.meta?.git_sha, simulated: o.meta?.simulated, cassette: o.cassette, meta: o.meta as Record<string, unknown>,
+    name: o.name,
+    created: new Date().toISOString(),
+    dataset: o.dataset,
+    mode,
+    trials,
+    git_sha: o.meta?.git_sha,
+    simulated: o.meta?.simulated,
+    cassette: o.cassette,
+    meta: o.meta as Record<string, unknown>,
   });
   const cassetteRuns = new Map<string, import('./types.js').Run[]>();
   if (mode === 'replay') {
@@ -59,8 +66,15 @@ export async function runDataset(o: RunOptions): Promise<{ runs: number; mismatc
       cassette = new Cassette(rec, o.match);
     }
     const tg = new AgentContext({
-      case: c, trial: t, mode, meta: o.meta, prices: o.prices, redaction: o.redaction, cassette,
-      storeChunkText: o.storeChunkText, sink: (ev) => o.store.appendEvent(file, ev),
+      case: c,
+      trial: t,
+      mode,
+      meta: o.meta,
+      prices: o.prices,
+      redaction: o.redaction,
+      cassette,
+      storeChunkText: o.storeChunkText,
+      sink: (ev) => o.store.appendEvent(file, ev),
     });
     tg.start(c.input);
     try {

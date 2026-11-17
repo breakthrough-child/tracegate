@@ -1,4 +1,6 @@
 export default {
+  dir: 'examples/support-agent/.tracegate',
+  baselines: 'examples/support-agent/baselines',
   dataset: 'examples/support-agent/dataset.yaml',
   thresholds: { task_success: 0.7 },
   gate_metrics: ['task_success'],

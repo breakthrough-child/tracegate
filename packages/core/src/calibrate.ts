@@ -41,11 +41,22 @@ export async function calibrateJudge(judge: Judge, items: CalibrationItem[]): Pr
   const warnings: string[] = [];
   if (items.length < 40) warnings.push(`Only ${items.length} labelled items: agreement and kappa are very uncertain (aim for 40+).`);
   if (new Set(humans).size < 2) warnings.push('Human labels contain a single class: kappa is not meaningful.');
-  return { judge: { model: judge.model, temperature: judge.temperature }, n: items.length, agreement, kappa, confusion: c, disagreements, warnings };
+  return {
+    judge: { model: judge.model, temperature: judge.temperature },
+    n: items.length,
+    agreement,
+    kappa,
+    confusion: c,
+    disagreements,
+    warnings,
+  };
 }
 
 /** Rate of order-dependent verdicts across pairs: a direct measure of position bias. */
-export async function positionBias(judge: Judge, pairs: { rubric: string; question: string; a: string; b: string }[]): Promise<{ n: number; inconsistent: number; rate: number; results: PairwiseResult[] }> {
+export async function positionBias(
+  judge: Judge,
+  pairs: { rubric: string; question: string; a: string; b: string }[],
+): Promise<{ n: number; inconsistent: number; rate: number; results: PairwiseResult[] }> {
   const results: PairwiseResult[] = [];
   for (const p of pairs) results.push(await pairwise(judge, p.rubric, p.question, p.a, p.b, true));
   const inconsistent = results.filter((r) => r.inconsistent).length;

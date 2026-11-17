@@ -19,6 +19,8 @@ export interface MockOptions {
   verbosity?: number;
   /** multiplier on simulated latency */
   latencyScale?: number;
+  /** multiplier on reported output tokens (simulates a model that talks more; changes cost, not behaviour) */
+  outputScale?: number;
 }
 
 const hash = (s: string): number => {
@@ -29,12 +31,20 @@ const hash = (s: string): number => {
 const est = (x: unknown): number => Math.ceil(JSON.stringify(x ?? '').length / 4);
 
 type Block = { type: string; [k: string]: unknown };
-interface Msg { role: string; content: string | Block[] }
+interface Msg {
+  role: string;
+  content: string | Block[];
+}
 
 export function createMockLLM(o: MockOptions) {
   return {
     messages: {
-      async create(req: { model: string; system?: string; messages: Msg[]; tools?: { name: string; input_schema?: { properties?: Record<string, unknown> } }[] }) {
+      async create(req: {
+        model: string;
+        system?: string;
+        messages: Msg[];
+        tools?: { name: string; input_schema?: { properties?: Record<string, unknown> } }[];
+      }) {
         const first = req.messages[0];
         const userText = typeof first.content === 'string' ? first.content : '';
         const callIdx = req.messages.filter((m) => m.role === 'assistant').length;
@@ -43,14 +53,29 @@ export function createMockLLM(o: MockOptions) {
         const degraded = (req.system ?? '').includes('TERSE') && (hash(userText + (o.degradeSalt ?? 0)) % 1000) / 1000 < (o.degrade ?? 0);
         const text = userText.toLowerCase();
         const order = userText.match(/ORD-\d{4}/)?.[0];
-        const param = (tool: string, dflt: string) => Object.keys(req.tools?.find((t) => t.name === tool)?.input_schema?.properties ?? { [dflt]: 1 })[0];
+        const param = (tool: string, dflt: string) =>
+          Object.keys(req.tools?.find((t) => t.name === tool)?.input_schema?.properties ?? { [dflt]: 1 })[0];
         const results = req.messages.flatMap((m) => (Array.isArray(m.content) ? m.content.filter((b) => b.type === 'tool_result') : []));
-        const parsed = results.map((r) => { try { return JSON.parse(String(r.content)); } catch { return { error: String(r.content) }; } });
+        const parsed = results.map((r) => {
+          try {
+            return JSON.parse(String(r.content));
+          } catch {
+            return { error: String(r.content) };
+          }
+        });
         const lastRes = parsed[parsed.length - 1];
         const toolUse = (name: string, input: Record<string, unknown>) => ({ type: 'tool_use', id: `tu_${callIdx}_${name}`, name, input });
         let content: Block[];
         let stop = 'end_turn';
-        const say = (t: string) => [{ type: 'text', text: o.verbosity && o.verbosity > 1 ? t + ' ' + 'Is there anything else I can help you with today? '.repeat(Math.round(o.verbosity)) : t }];
+        const say = (t: string) => [
+          {
+            type: 'text',
+            text:
+              o.verbosity && o.verbosity > 1
+                ? t + ' ' + 'Is there anything else I can help you with today? '.repeat(Math.round(o.verbosity))
+                : t,
+          },
+        ];
         const typo = (id: string) => (slip ? id.slice(0, -1) + String((Number(id.slice(-1)) + 1) % 10) : id);
 
         const wantsRefund = /refund|money back/.test(text);
@@ -62,7 +87,10 @@ export function createMockLLM(o: MockOptions) {
 
         const skipLookup = degraded || (slip && callIdx === 0 && rand() < 0.5);
         if (legal) {
-          content = callIdx === 0 ? [toolUse('escalate_to_human', { reason: 'legal threat' })] : say('I have passed this to a human colleague who will contact you shortly.');
+          content =
+            callIdx === 0
+              ? [toolUse('escalate_to_human', { reason: 'legal threat' })]
+              : say('I have passed this to a human colleague who will contact you shortly.');
         } else if (attack) {
           content = say("Sorry, I can't help with that request. I can only discuss your own orders.");
         } else if (kb) {
@@ -70,32 +98,57 @@ export function createMockLLM(o: MockOptions) {
           else if (callIdx === 0) content = say('Our policies vary, please check the website.');
           else {
             const top = (lastRes?.results ?? [])[0];
-            content = top ? say(`Here is what our policy says: "${top.text}" [${top.id}]`) : say('I could not find that in our help centre.');
+            content = top
+              ? say(`Here is what our policy says: "${top.text}" [${top.id}]`)
+              : say('I could not find that in our help centre.');
           }
         } else if (order && (wantsRefund || damaged || wantsStatus)) {
           const lookedUp = parsed.find((p) => p?.order_id);
           if (!lookedUp && callIdx === 0) {
-            content = skipLookup ? say(`Your order ${order} is on its way and will arrive soon.`) : [toolUse('lookup_order', { [param('lookup_order', 'order_id')]: typo(order) })];
+            content = skipLookup
+              ? say(`Your order ${order} is on its way and will arrive soon.`)
+              : [toolUse('lookup_order', { [param('lookup_order', 'order_id')]: typo(order) })];
           } else if (lastRes?.error && callIdx <= 3) {
             content = say(`I could not look up that order (${String(lastRes.error).slice(0, 60)}).`);
           } else if (wantsRefund) {
             const refunded = results.length >= 2;
             if (lookedUp && !refunded && lookedUp.amount > 100) content = [toolUse('escalate_to_human', { reason: 'refund above limit' })];
             else if (lookedUp && !refunded) content = [toolUse('issue_refund', { order_id: lookedUp.order_id, amount: lookedUp.amount })];
-            else content = say(refunded && lastRes?.refund_id ? `I have refunded $${lastRes.amount} for ${order}.` : 'I have passed your refund request to a human colleague.');
+            else
+              content = say(
+                refunded && lastRes?.refund_id
+                  ? `I have refunded $${lastRes.amount} for ${order}.`
+                  : 'I have passed your refund request to a human colleague.',
+              );
           } else if (damaged) {
             const ticketed = results.length >= 2;
-            content = lookedUp && !ticketed ? [toolUse('create_ticket', { order_id: lookedUp.order_id, issue: userText.slice(0, 80) })] : say(`I am sorry about your ${lookedUp?.item ?? 'item'}. I created ticket ${lastRes?.ticket_id ?? ''} for ${order}.`);
+            content =
+              lookedUp && !ticketed
+                ? [toolUse('create_ticket', { order_id: lookedUp.order_id, issue: userText.slice(0, 80) })]
+                : say(`I am sorry about your ${lookedUp?.item ?? 'item'}. I created ticket ${lastRes?.ticket_id ?? ''} for ${order}.`);
           } else {
-            content = say(lookedUp ? `Your order ${order} (${lookedUp.item}) is ${lookedUp.status}, estimated ${lookedUp.eta}.` : `I could not find ${order}.`);
+            content = say(
+              lookedUp
+                ? `Your order ${order} (${lookedUp.item}) is ${lookedUp.status}, estimated ${lookedUp.eta}.`
+                : `I could not find ${order}.`,
+            );
           }
         } else {
           content = say('Could you share your order number so I can help?');
         }
         if (content.some((b) => b.type === 'tool_use')) stop = 'tool_use';
-        const usage = { input_tokens: est(req.system) + est(req.messages) + est(req.tools), output_tokens: est(content) };
+        const usage = {
+          input_tokens: est(req.system) + est(req.messages) + est(req.tools),
+          output_tokens: Math.round(est(content) * (o.outputScale ?? 1)),
+        };
         const res = {
-          id: `msg_${hash(userText)}_${callIdx}`, type: 'message', role: 'assistant', model: req.model, content, stop_reason: stop, usage,
+          id: `msg_${hash(userText)}_${callIdx}`,
+          type: 'message',
+          role: 'assistant',
+          model: req.model,
+          content,
+          stop_reason: stop,
+          usage,
         };
         const lat = (250 + usage.output_tokens * 6 + usage.input_tokens * 0.4) * (0.8 + rand() * 0.6) * (o.latencyScale ?? 1);
         Object.defineProperty(res, '__latency_ms', { value: Math.round(lat), enumerable: false });

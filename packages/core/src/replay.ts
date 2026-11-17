@@ -84,7 +84,12 @@ export class Cassette {
   get length(): number {
     return this.calls.length;
   }
-  next(i: number, request: unknown, provider: string, model: string): { response: unknown; usage?: Usage; cost_usd?: number; latency_ms: number } {
+  next(
+    i: number,
+    request: unknown,
+    provider: string,
+    model: string,
+  ): { response: unknown; usage?: Usage; cost_usd?: number; latency_ms: number } {
     const rec = this.calls[i];
     if (!rec) {
       throw new ReplayMismatchError(i, [`the agent made model call #${i + 1} but the recording only has ${this.calls.length}`]);

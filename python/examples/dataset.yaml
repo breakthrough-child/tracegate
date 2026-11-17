@@ -1,0 +1,10 @@
+- id: py-1
+  input: Where is ORD-1001?
+  expected:
+    tools: [{ name: lookup_order, args: { order_id: ORD-1001 } }]
+    answer: { contains: [shipped] }
+- id: py-2
+  input: Where is ORD-1002?
+  expected:
+    tools: [{ name: lookup_order, args: { order_id: ORD-1002 } }]
+    answer: { contains: [delayed] }

@@ -1,0 +1,166 @@
+{
+  "generated": "2026-11-17T16:50:53.529Z",
+  "node": "v22.22.3",
+  "simulated": true,
+  "dataset_cases": 40,
+  "experiment": "budget gates under noise",
+  "tolerance_relative": 0.05,
+  "noise_per_call": 0.05,
+  "false_alarm_replications": 150,
+  "identical_agents": {
+    "naive_single_run_mean_cost_over_tolerance": {
+      "k": 5,
+      "n": 150,
+      "rate": 0.03333333333333333,
+      "ci95": [
+        0.014320220695575196,
+        0.0756528425070956
+      ]
+    },
+    "naive_single_run_p95_latency_over_tolerance": {
+      "k": 20,
+      "n": 150,
+      "rate": 0.13333333333333333,
+      "ci95": [
+        0.08799732892586416,
+        0.1969815064476629
+      ]
+    },
+    "tracegate_cost_5_trials": {
+      "k": 0,
+      "n": 150,
+      "rate": 0,
+      "ci95": [
+        0,
+        0.02497113914571871
+      ]
+    },
+    "tracegate_mean_latency_5_trials": {
+      "k": 0,
+      "n": 150,
+      "rate": 0,
+      "ci95": [
+        0,
+        0.02497113914571871
+      ]
+    }
+  },
+  "injected_cost_increase": [
+    {
+      "output_token_multiplier": 1.05,
+      "realised_mean_cost_increase": 0.012743158162370026,
+      "replications": 60,
+      "naive_single_run_fires": {
+        "k": 6,
+        "n": 60,
+        "rate": 0.1,
+        "ci95": [
+          0.04664219945723587,
+          0.20149694492511044
+        ]
+      },
+      "tracegate_5_trials_fires": {
+        "k": 0,
+        "n": 60,
+        "rate": 0,
+        "ci95": [
+          -6.521353384539763e-18,
+          0.060173930477932895
+        ]
+      }
+    },
+    {
+      "output_token_multiplier": 1.1,
+      "realised_mean_cost_increase": 0.029970210775713848,
+      "replications": 60,
+      "naive_single_run_fires": {
+        "k": 15,
+        "n": 60,
+        "rate": 0.25,
+        "ci95": [
+          0.1577638557841185,
+          0.3723231094548479
+        ]
+      },
+      "tracegate_5_trials_fires": {
+        "k": 2,
+        "n": 60,
+        "rate": 0.03333333333333333,
+        "ci95": [
+          0.009189126490150246,
+          0.11363987528925378
+        ]
+      }
+    },
+    {
+      "output_token_multiplier": 1.25,
+      "realised_mean_cost_increase": 0.07111363095765814,
+      "replications": 60,
+      "naive_single_run_fires": {
+        "k": 52,
+        "n": 60,
+        "rate": 0.8666666666666667,
+        "ci95": [
+          0.758346054099279,
+          0.9308597302169036
+        ]
+      },
+      "tracegate_5_trials_fires": {
+        "k": 59,
+        "n": 60,
+        "rate": 0.9833333333333333,
+        "ci95": [
+          0.911446617732205,
+          0.9970519161391264
+        ]
+      }
+    },
+    {
+      "output_token_multiplier": 1.5,
+      "realised_mean_cost_increase": 0.144596025744056,
+      "replications": 60,
+      "naive_single_run_fires": {
+        "k": 60,
+        "n": 60,
+        "rate": 1,
+        "ci95": [
+          0.939826069522067,
+          0.9999999999999998
+        ]
+      },
+      "tracegate_5_trials_fires": {
+        "k": 60,
+        "n": 60,
+        "rate": 1,
+        "ci95": [
+          0.939826069522067,
+          0.9999999999999998
+        ]
+      }
+    },
+    {
+      "output_token_multiplier": 2,
+      "realised_mean_cost_increase": 0.284078582178555,
+      "replications": 60,
+      "naive_single_run_fires": {
+        "k": 60,
+        "n": 60,
+        "rate": 1,
+        "ci95": [
+          0.939826069522067,
+          0.9999999999999998
+        ]
+      },
+      "tracegate_5_trials_fires": {
+        "k": 60,
+        "n": 60,
+        "rate": 1,
+        "ci95": [
+          0.939826069522067,
+          0.9999999999999998
+        ]
+      }
+    }
+  ],
+  "note": "Cost noise here comes only from behavioural slips (extra/missing tool steps) and is small; real model output lengths vary much more, so naive false-alarm rates on real models are likely higher. Not measured."
+}

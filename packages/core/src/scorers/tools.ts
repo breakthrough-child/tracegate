@@ -1,8 +1,7 @@
 import type { ExpectedTool, ToolCallEvent } from '../types.js';
 import { matchSubset, na, toolCalls, type Scorer } from './util.js';
 
-const callMatches = (exp: ExpectedTool, c: ToolCallEvent): boolean =>
-  exp.name === c.name && (!exp.args || matchSubset(exp.args, c.args));
+const callMatches = (exp: ExpectedTool, c: ToolCallEvent): boolean => exp.name === c.name && (!exp.args || matchSubset(exp.args, c.args));
 
 /** Tool-call correctness: expected present, forbidden absent, argument matchers, ordering, extra-call penalty. */
 export const toolScorer: Scorer = {
@@ -19,9 +18,17 @@ export const toolScorer: Scorer = {
     for (const exp of expected) {
       let idx = -1;
       if (e.order === 'strict') {
-        for (let i = cursor; i < calls.length; i++) if (callMatches(exp, calls[i]) && !used.has(i)) { idx = i; break; }
+        for (let i = cursor; i < calls.length; i++)
+          if (callMatches(exp, calls[i]) && !used.has(i)) {
+            idx = i;
+            break;
+          }
       } else {
-        for (let i = 0; i < calls.length; i++) if (callMatches(exp, calls[i]) && !used.has(i)) { idx = i; break; }
+        for (let i = 0; i < calls.length; i++)
+          if (callMatches(exp, calls[i]) && !used.has(i)) {
+            idx = i;
+            break;
+          }
       }
       if (idx >= 0) {
         used.add(idx);

@@ -6,8 +6,6 @@ const resolve = <T>(x: Lazy<T>): (() => T) => {
   return () => (v ??= typeof x === 'function' ? (x as () => T)() : x);
 };
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 /**
  * Wrap an Anthropic SDK client (or a factory for one). In replay mode the factory is never called,
  * so no API key or network is needed. Streaming is not supported yet.
@@ -20,9 +18,19 @@ export function wrapAnthropic(tg: AgentContext, source: Lazy<any>, opts: { retri
         if (req?.stream) throw new Error('Tracegate: streaming requests are not supported yet; use non-streaming calls when recording');
         return tg.model(
           {
-            provider: 'anthropic', model: req.model, request: req, retries: opts.retries,
+            provider: 'anthropic',
+            model: req.model,
+            request: req,
+            retries: opts.retries,
             params: { temperature: req.temperature, max_tokens: req.max_tokens },
-            usage: (r: any) => (r?.usage ? { input_tokens: r.usage.input_tokens ?? 0, output_tokens: r.usage.output_tokens ?? 0, cache_read_tokens: r.usage.cache_read_input_tokens } : undefined),
+            usage: (r: any) =>
+              r?.usage
+                ? {
+                    input_tokens: r.usage.input_tokens ?? 0,
+                    output_tokens: r.usage.output_tokens ?? 0,
+                    cache_read_tokens: r.usage.cache_read_input_tokens,
+                  }
+                : undefined,
           },
           () => live().messages.create(req),
         );
@@ -41,9 +49,13 @@ export function wrapOpenAI(tg: AgentContext, source: Lazy<any>, opts: { provider
           if (req?.stream) throw new Error('Tracegate: streaming requests are not supported yet; use non-streaming calls when recording');
           return tg.model(
             {
-              provider: opts.provider ?? 'openai', model: req.model, request: req, retries: opts.retries,
+              provider: opts.provider ?? 'openai',
+              model: req.model,
+              request: req,
+              retries: opts.retries,
               params: { temperature: req.temperature, max_tokens: req.max_tokens },
-              usage: (r: any) => (r?.usage ? { input_tokens: r.usage.prompt_tokens ?? 0, output_tokens: r.usage.completion_tokens ?? 0 } : undefined),
+              usage: (r: any) =>
+                r?.usage ? { input_tokens: r.usage.prompt_tokens ?? 0, output_tokens: r.usage.completion_tokens ?? 0 } : undefined,
             },
             () => live().chat.completions.create(req),
           );
@@ -70,7 +82,9 @@ export function wrapTools<T extends Record<string, (args: any) => any>>(tg: Agen
 }
 
 /** Wrap a Model Context Protocol client: every callTool is recorded as a tool call. */
-export function wrapMcpClient<C extends { callTool: (p: { name: string; arguments?: Record<string, unknown> }, ...rest: any[]) => Promise<any> }>(tg: AgentContext, client: C): C {
+export function wrapMcpClient<
+  C extends { callTool: (p: { name: string; arguments?: Record<string, unknown> }, ...rest: any[]) => Promise<any> },
+>(tg: AgentContext, client: C): C {
   return new Proxy(client, {
     get(target, prop, recv) {
       if (prop === 'callTool') {
@@ -98,7 +112,8 @@ export interface JudgeOptions {
 export function anthropicJudge(o: JudgeOptions): Judge {
   const temperature = o.temperature ?? 0;
   return {
-    model: o.model, temperature,
+    model: o.model,
+    temperature,
     async complete(system, user) {
       const key = o.apiKey ?? process.env.ANTHROPIC_API_KEY;
       if (!key) throw new Error('ANTHROPIC_API_KEY is not set (needed for the Anthropic judge)');
@@ -109,7 +124,10 @@ export function anthropicJudge(o: JudgeOptions): Judge {
       });
       if (!res.ok) throw new Error(`Anthropic judge error ${res.status}: ${await res.text()}`);
       const j = (await res.json()) as { content: { type: string; text?: string }[] };
-      return j.content.filter((c) => c.type === 'text').map((c) => c.text).join('');
+      return j.content
+        .filter((c) => c.type === 'text')
+        .map((c) => c.text)
+        .join('');
     },
   };
 }
@@ -117,14 +135,22 @@ export function anthropicJudge(o: JudgeOptions): Judge {
 export function openaiJudge(o: JudgeOptions): Judge {
   const temperature = o.temperature ?? 0;
   return {
-    model: o.model, temperature,
+    model: o.model,
+    temperature,
     async complete(system, user) {
       const key = o.apiKey ?? process.env.OPENAI_API_KEY;
       if (!key) throw new Error('OPENAI_API_KEY is not set (needed for the OpenAI-compatible judge)');
       const res = await fetch((o.baseUrl ?? 'https://api.openai.com/v1') + '/chat/completions', {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-        body: JSON.stringify({ model: o.model, temperature, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
+        body: JSON.stringify({
+          model: o.model,
+          temperature,
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user },
+          ],
+        }),
       });
       if (!res.ok) throw new Error(`OpenAI judge error ${res.status}: ${await res.text()}`);
       const j = (await res.json()) as { choices: { message: { content: string } }[] };
@@ -137,6 +163,7 @@ export function openaiJudge(o: JudgeOptions): Judge {
 export function judgeFromEnv(spec?: string): Judge | undefined {
   const [provider, model] = (spec ?? '').split(':');
   if (provider === 'anthropic' || (!spec && process.env.ANTHROPIC_API_KEY)) return anthropicJudge({ model: model || 'claude-sonnet-4-5' });
-  if (provider === 'openai' || (!spec && process.env.OPENAI_API_KEY)) return openaiJudge({ model: model || 'gpt-4o-mini', baseUrl: process.env.OPENAI_BASE_URL });
+  if (provider === 'openai' || (!spec && process.env.OPENAI_API_KEY))
+    return openaiJudge({ model: model || 'gpt-4o-mini', baseUrl: process.env.OPENAI_BASE_URL });
   return undefined;
 }

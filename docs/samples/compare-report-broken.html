@@ -1,0 +1,142 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tracegate comparison</title><style>
+:root{--bg:#fff;--fg:#1d2330;--mut:#667085;--line:#e4e7ec;--card:#f8f9fb;--bad:#b42318;--good:#067647;--warn:#b54708;--acc:#2e5bff}
+@media (prefers-color-scheme:dark){:root{--bg:#12151c;--fg:#e6e9ef;--mut:#98a2b3;--line:#2a3140;--card:#1a1f2a;--bad:#f97066;--good:#47cd89;--warn:#fdb022;--acc:#8ca4ff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px}h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:28px 0 8px}
+.mut{color:var(--mut)}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:600}.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.big{font-size:22px;font-weight:650}
+.bad{color:var(--bad)}.good{color:var(--good)}.warn{color:var(--warn)}code,pre{font:12px ui-monospace,monospace}pre{background:var(--card);border:1px solid var(--line);padding:8px;border-radius:6px;overflow:auto;max-height:260px;white-space:pre-wrap}
+.pill{display:inline-block;padding:0 8px;border-radius:10px;font-size:12px;border:1px solid var(--line)}details{margin:4px 0}summary{cursor:pointer}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.cols{grid-template-columns:1fr}}
+</style></head><body><main><h1>Tracegate comparison</h1><p class="mut">support-agent (baseline) vs broken (candidate) · 40 paired cases · 3 / 3 trials per case</p>
+<h2>Gate: <span class="bad">failed</span></h2><ul><li class="bad">regression: task_success regressed: 0.967 -&gt; 0.842 (diff -0.125, 95% CI -0.233 to -0.033, p=0.020)</li><li class="mut">data: Latency figures include simulated latency from the mock model.</li></ul><p class="warn">Latency figures include simulated latency from the mock model.</p>
+<h2>Headline metrics</h2><table><tr><th>metric</th><th>baseline</th><th>candidate</th><th>diff (95% paired-bootstrap CI)</th><th>p</th><th>effect size d<sub>z</sub></th><th>verdict</th></tr><tr><td>task_success</td><td>0.967</td><td>0.842</td><td>-0.125 <span class="mut">(-0.233, -0.033)</span></td><td>0.020</td><td>-0.36</td><td class="bad">regression</td></tr><tr><td>cost_usd</td><td>$0.00317</td><td>$0.00259</td><td>-0.001 <span class="mut">(-0.001, -0.000)</span></td><td>0.000</td><td>-0.61</td><td class="good">improvement <span class="mut">(lower is better)</span></td></tr><tr><td>latency_ms</td><td>1330 ms</td><td>1177 ms</td><td>-153 <span class="mut">(-281, -42.946)</span></td><td>0.010</td><td>-0.38</td><td class="good">improvement <span class="mut">(lower is better)</span></td></tr><tr><td>tokens</td><td>815</td><td>646</td><td>-169 <span class="mut">(-249, -103)</span></td><td>0.000</td><td>-0.69</td><td class="good">improvement <span class="mut">(lower is better)</span></td></tr><tr><td>steps</td><td>2.192</td><td>2.000</td><td>-0.192 <span class="mut">(-0.392, -0.033)</span></td><td>0.038</td><td>-0.33</td><td class="good">improvement <span class="mut">(lower is better)</span></td></tr><tr><td>tool_accuracy</td><td>0.942</td><td>0.817</td><td>-0.125 <span class="mut">(-0.233, -0.033)</span></td><td>0.020</td><td>-0.36</td><td class="bad">regression</td></tr><tr><td>answer_checks</td><td>0.958</td><td>0.778</td><td>-0.181 <span class="mut">(-0.347, -0.042)</span></td><td>0.023</td><td>-0.47</td><td class="bad">regression</td></tr><tr><td>safety</td><td>1.000</td><td>1.000</td><td>+0.000 <span class="mut">(0.000, 0.000)</span></td><td>1.000</td><td>0.00</td><td class="mut">no significant change</td></tr><tr><td>loop_free</td><td>1.000</td><td>1.000</td><td>+0.000 <span class="mut">(0.000, 0.000)</span></td><td>1.000</td><td>0.00</td><td class="mut">no significant change</td></tr><tr><td>outcome</td><td>0.976</td><td>0.786</td><td>-0.190 <span class="mut">(-0.429, 0.024)</span></td><td>0.106</td><td>-0.43</td><td class="mut">no significant change</td></tr><tr><td>escalation_recall</td><td>1.000</td><td>1.000</td><td>+0.000 <span class="mut">(0.000, 0.000)</span></td><td>1.000</td><td>0.00</td><td class="warn">insufficient data</td></tr><tr><td>escalation_precision</td><td>1.000</td><td>1.000</td><td>+0.000 <span class="mut">(0.000, 0.000)</span></td><td>1.000</td><td>0.00</td><td class="warn">insufficient data</td></tr><tr><td>behavior_correct</td><td>1.000</td><td>1.000</td><td>+0.000 <span class="mut">(0.000, 0.000)</span></td><td>1.000</td><td>0.00</td><td class="mut">no significant change</td></tr><tr><td>retrieval_recall</td><td>0.958</td><td>1.000</td><td>+0.042 <span class="mut">(0.000, 0.125)</span></td><td>0.599</td><td>0.35</td><td class="warn">insufficient data</td></tr><tr><td>retrieval_precision</td><td>0.319</td><td>0.333</td><td>+0.014 <span class="mut">(0.000, 0.042)</span></td><td>0.599</td><td>0.35</td><td class="warn">insufficient data</td></tr><tr><td>retrieval_mrr</td><td>0.958</td><td>1.000</td><td>+0.042 <span class="mut">(0.000, 0.125)</span></td><td>0.599</td><td>0.35</td><td class="warn">insufficient data</td></tr><tr><td>retrieval_ndcg</td><td>0.958</td><td>1.000</td><td>+0.042 <span class="mut">(0.000, 0.125)</span></td><td>0.599</td><td>0.35</td><td class="warn">insufficient data</td></tr><tr><td>citation_accuracy</td><td>0.958</td><td>1.000</td><td>+0.042 <span class="mut">(0.000, 0.125)</span></td><td>0.599</td><td>0.35</td><td class="warn">insufficient data</td></tr><tr><td>refusal_recall</td><td>1.000</td><td>1.000</td><td>+0.000 <span class="mut">(0.000, 0.000)</span></td><td>1.000</td><td>0.00</td><td class="warn">insufficient data</td></tr><tr><td>refusal_precision</td><td>1.000</td><td>1.000</td><td>+0.000 <span class="mut">(0.000, 0.000)</span></td><td>1.000</td><td>0.00</td><td class="warn">insufficient data</td></tr></table>
+<p class="mut">Pass/fail changes (exact McNemar on discordant cases): 6 regressed, 0 improved, p = 0.031. pass@3: 1.000 → 0.850. p95 latency: 2038 → 1928 ms.</p>
+<h2>By category</h2><table><tr><th>category</th><th>cases</th><th>baseline</th><th>candidate</th><th>diff</th></tr><tr><td>order_status</td><td>10</td><td>93.3%</td><td>66.7%</td><td class="bad">-26.7 pts</td></tr><tr><td>refund</td><td>8</td><td>95.8%</td><td>87.5%</td><td class="bad">-8.3 pts</td></tr><tr><td>ticket</td><td>6</td><td>100.0%</td><td>66.7%</td><td class="bad">-33.3 pts</td></tr><tr><td>knowledge</td><td>8</td><td>95.8%</td><td>100.0%</td><td class="good">+4.2 pts</td></tr><tr><td>escalation</td><td>3</td><td>100.0%</td><td>100.0%</td><td class="mut">+0.0 pts</td></tr><tr><td>refusal</td><td>5</td><td>100.0%</td><td>100.0%</td><td class="mut">+0.0 pts</td></tr></table>
+<h2>Cost versus quality</h2><svg viewBox="0 0 460 190" width="100%" style="max-width:520px" role="img" aria-label="cost versus quality"><line x1="50" y1="150" x2="440" y2="150" stroke="var(--line)"/><line x1="50" y1="20" x2="50" y2="150" stroke="var(--line)"/>
+  <text x="240" y="178" text-anchor="middle" fill="var(--mut)" font-size="11">mean cost per case (USD) →</text><text x="10" y="90" fill="var(--mut)" font-size="11" transform="rotate(-90 10 90)">pass rate →</text>
+  <circle cx="342.30769230769226" cy="24.333333333333314" r="6" fill="var(--mut)"/><text x="351.30769230769226" y="28.333333333333314" font-size="11" fill="var(--fg)">support-agent (96.7%, $0.00317)</text><circle cx="289.1262112919658" cy="40.583333333333314" r="6" fill="var(--acc)"/><text x="298.1262112919658" y="44.583333333333314" font-size="11" fill="var(--fg)">broken (84.2%, $0.00259)</text></svg>
+<h2>Changed cases (9)</h2><details><summary><span class="pill bad">regressed</span> <code>status-4</code> 66.7% → 0.0% <span class="mut">order_status</span></summary><p class="bad">tool_accuracy: expected tool lookup_order was not called<br>answer_checks: answer does not contain &quot;delayed&quot;</p><div class="cols"><div><b>baseline</b><pre>Run edd872ca-193e-48d1-a2fb-1a06dcf21a1f  [ok]  59ms
++    0ms  RUN    case=status-4 trial=0 input=Where is my order ORD-1004?
++   32ms  MODEL  anthropic/mock-large 279→25 tok $0.00121 684ms
+                  ↳ [tool_use lookup_order {&quot;order_id&quot;:&quot;ORD-1004&quot;}]
++   40ms  TOOL   lookup_order({&quot;order_id&quot;:&quot;ORD-1004&quot;}) → {&quot;order_id&quot;:&quot;ORD-1004&quot;,&quot;item&quot;:&quot;coffee grinder&quot;,&quot;status&quot;:&quot;delayed&quot;,&quot;amount&quot;:120,… 0ms
++   53ms  MODEL  anthropic/mock-large 365→25 tok $0.00147 555ms
+                  ↳ Your order ORD-1004 (coffee grinder) is delayed, estimated 2025-04-13.
++   59ms  END    ok output=Your order ORD-1004 (coffee grinder) is delayed, estimated 2025-04-13.</pre></div><div><b>candidate</b><pre>Run cc4eca08-74ff-489e-9bce-2a3945bccf5d  [ok]  9ms
++    0ms  RUN    case=status-4 trial=0 input=Where is my order ORD-1004?
++    4ms  MODEL  anthropic/mock-large 236→21 tok $0.00102 599ms
+                  ↳ Your order ORD-1004 is on its way and will arrive soon.
++    9ms  END    ok output=Your order ORD-1004 is on its way and will arrive soon.</pre></div></div></details><details><summary><span class="pill bad">regressed</span> <code>status-7</code> 100.0% → 0.0% <span class="mut">order_status</span></summary><p class="bad">tool_accuracy: expected tool lookup_order was not called<br>answer_checks: answer does not contain &quot;delivered&quot;</p><div class="cols"><div><b>baseline</b><pre>Run 97ce23ab-44b3-40e2-9862-23d34aae2a11  [ok]  54ms
++    0ms  RUN    case=status-7 trial=0 input=Where is my order ORD-1007?
++   14ms  MODEL  anthropic/mock-large 279→25 tok $0.00121 707ms
+                  ↳ [tool_use lookup_order {&quot;order_id&quot;:&quot;ORD-1007&quot;}]
++   27ms  TOOL   lookup_order({&quot;order_id&quot;:&quot;ORD-1007&quot;}) → {&quot;order_id&quot;:&quot;ORD-1007&quot;,&quot;item&quot;:&quot;water bottle&quot;,&quot;status&quot;:&quot;delivered&quot;,&quot;amount&quot;:15,&quot;… 1ms
++   43ms  MODEL  anthropic/mock-large 365→25 tok $0.00147 681ms
+                  ↳ Your order ORD-1007 (water bottle) is delivered, estimated 2025-07-16.
++   54ms  END    ok output=Your order ORD-1007 (water bottle) is delivered, estimated 2025-07-16.</pre></div><div><b>candidate</b><pre>Run f4c459a0-adbb-40d2-be96-d1dc2d48b068  [ok]  6ms
++    0ms  RUN    case=status-7 trial=0 input=Where is my order ORD-1007?
++    4ms  MODEL  anthropic/mock-large 236→21 tok $0.00102 477ms
+                  ↳ Your order ORD-1007 is on its way and will arrive soon.
++    6ms  END    ok output=Your order ORD-1007 is on its way and will arrive soon.</pre></div></div></details><details><summary><span class="pill bad">regressed</span> <code>status-9</code> 66.7% → 0.0% <span class="mut">order_status</span></summary><p class="bad">tool_accuracy: expected tool lookup_order was not called<br>answer_checks: answer does not contain &quot;processing&quot;</p><div class="cols"><div><b>baseline</b><pre>Run aecdd6d7-2757-4f21-a3df-06d7cdb355a2  [ok]  22ms
++    0ms  RUN    case=status-9 trial=0 input=What is the status of ORD-1009?
++    7ms  MODEL  anthropic/mock-large 280→25 tok $0.00121 619ms
+                  ↳ [tool_use lookup_order {&quot;order_id&quot;:&quot;ORD-1000&quot;}]
++   12ms  TOOL   lookup_order({&quot;order_id&quot;:&quot;ORD-1000&quot;}) ERROR order not found: {&quot;order_id&quot;:&quot;ORD-1000&quot;} 0ms
++   16ms  MODEL  anthropic/mock-large 354→27 tok $0.00147 534ms
+                  ↳ I could not look up that order (order not found: {&quot;order_id&quot;:&quot;ORD-1000&quot;}).
++   22ms  END    ok output=I could not look up that order (order not found: {&quot;order_id&quot;:&quot;ORD-1000&quot;}).</pre></div><div><b>candidate</b><pre>Run f7af2803-e367-45cd-ac57-0655422d2a27  [ok]  6ms
++    0ms  RUN    case=status-9 trial=0 input=What is the status of ORD-1009?
++    4ms  MODEL  anthropic/mock-large 237→21 tok $0.00103 523ms
+                  ↳ Your order ORD-1009 is on its way and will arrive soon.
++    6ms  END    ok output=Your order ORD-1009 is on its way and will arrive soon.</pre></div></div></details><details><summary><span class="pill bad">regressed</span> <code>status-10</code> 100.0% → 66.7% <span class="mut">order_status</span></summary><p class="bad">tool_accuracy: tool lookup_order called but arguments did not match {&quot;order_id&quot;:&quot;ORD-1010&quot;}; 1 unnecessary tool calls (max 0)<br>answer_checks: answer does not contain &quot;shipped&quot;</p><div class="cols"><div><b>baseline</b><pre>Run 69a187c3-7a26-4fb1-bddd-a21b96770b28  [ok]  57ms
++    0ms  RUN    case=status-10 trial=0 input=Where is my order ORD-1010?
++    4ms  MODEL  anthropic/mock-large 279→25 tok $0.00121 644ms
+                  ↳ [tool_use lookup_order {&quot;order_id&quot;:&quot;ORD-1010&quot;}]
++    7ms  TOOL   lookup_order({&quot;order_id&quot;:&quot;ORD-1010&quot;}) → {&quot;order_id&quot;:&quot;ORD-1010&quot;,&quot;item&quot;:&quot;blender&quot;,&quot;status&quot;:&quot;shipped&quot;,&quot;amount&quot;:210,&quot;eta&quot;:&quot;… 2ms
++   31ms  MODEL  anthropic/mock-large 363→23 tok $0.00143 581ms
+                  ↳ Your order ORD-1010 (blender) is shipped, estimated 2025-01-10.
++   57ms  END    ok output=Your order ORD-1010 (blender) is shipped, estimated 2025-01-10.</pre></div><div><b>candidate</b><pre>Run c34b076c-cd86-4391-8b6d-d6a4f3725f04  [ok]  14ms
++    0ms  RUN    case=status-10 trial=0 input=Where is my order ORD-1010?
++    3ms  MODEL  anthropic/mock-large 236→25 tok $0.00108 476ms
+                  ↳ [tool_use lookup_order {&quot;order_id&quot;:&quot;ORD-1011&quot;}]
++    6ms  TOOL   lookup_order({&quot;order_id&quot;:&quot;ORD-1011&quot;}) → {&quot;order_id&quot;:&quot;ORD-1011&quot;,&quot;item&quot;:&quot;desk lamp&quot;,&quot;status&quot;:&quot;delivered&quot;,&quot;amount&quot;:19,&quot;eta… 0ms
++   10ms  MODEL  anthropic/mock-large 321→24 tok $0.00132 617ms
+                  ↳ Your order ORD-1010 (desk lamp) is delivered, estimated 2025-02-11.
++   14ms  END    ok output=Your order ORD-1010 (desk lamp) is delivered, estimated 2025-02-11.</pre></div></div></details><details><summary><span class="pill bad">regressed</span> <code>refund-1</code> 100.0% → 0.0% <span class="mut">refund</span></summary><p class="bad">tool_accuracy: expected tool lookup_order was not called; expected tool issue_refund was not called<br>outcome: outcome &quot;refund_created&quot; not satisfied by final state</p><div class="cols"><div><b>baseline</b><pre>Run 66e13274-eb2f-4909-ac2b-9a8641a246a2  [ok]  92ms
++    0ms  RUN    case=refund-1 trial=0 input=I want a refund for order ORD-1015, please.
++   10ms  MODEL  anthropic/mock-large 283→25 tok $0.00122 703ms
+                  ↳ [tool_use lookup_order {&quot;order_id&quot;:&quot;ORD-1015&quot;}]
++   19ms  TOOL   lookup_order({&quot;order_id&quot;:&quot;ORD-1015&quot;}) → {&quot;order_id&quot;:&quot;ORD-1015&quot;,&quot;item&quot;:&quot;backpack&quot;,&quot;status&quot;:&quot;delivered&quot;,&quot;amount&quot;:22,&quot;eta&quot;… 1ms
++   61ms  MODEL  anthropic/mock-large 368→28 tok $0.00152 482ms
+                  ↳ [tool_use issue_refund {&quot;order_id&quot;:&quot;ORD-1015&quot;,&quot;amount&quot;:22}]
++   74ms  EVENT  approval {&quot;auto&quot;:true,&quot;amount&quot;:22}
++   83ms  TOOL   issue_refund({&quot;order_id&quot;:&quot;ORD-1015&quot;,&quot;amount&quot;:22}) → {&quot;refund_id&quot;:&quot;RF-1&quot;,&quot;order_id&quot;:&quot;ORD-1015&quot;,&quot;amount&quot;:22} 9ms
++   88ms  MODEL  anthropic/mock-large 444→15 tok $0.00156 453ms
+                  ↳ I have refunded $22 for ORD-1015.
++   92ms  END    ok output=I have refunded $22 for ORD-1015.</pre></div><div><b>candidate</b><pre>Run a0346aba-5b86-4682-a577-16ee8e832f40  [ok]  6ms
++    0ms  RUN    case=refund-1 trial=0 input=I want a refund for order ORD-1015, please.
++    1ms  MODEL  anthropic/mock-large 240→21 tok $0.00103 650ms
+                  ↳ Your order ORD-1015 is on its way and will arrive soon.
++    6ms  END    ok output=Your order ORD-1015 is on its way and will arrive soon.</pre></div></div></details><details><summary><span class="pill good">improved</span> <code>refund-5</code> 66.7% → 100.0% <span class="mut">refund</span></summary><div class="cols"><div><b>baseline</b><pre>Run 3278d887-9a1b-4148-9b9c-52e57e7f6679  [ok]  9ms
++    0ms  RUN    case=refund-5 trial=0 input=I want a refund for order ORD-1021, please.
++    5ms  MODEL  anthropic/mock-large 283→21 tok $0.00116 559ms
+                  ↳ Your order ORD-1021 is on its way and will arrive soon.
++    8ms  END    ok output=Your order ORD-1021 is on its way and will arrive soon.</pre></div><div><b>candidate</b><pre>Run 53c9363f-7328-4ad4-ad98-09b50a572213  [ok]  29ms
++    0ms  RUN    case=refund-5 trial=0 input=I want a refund for order ORD-1021, please.
++    5ms  MODEL  anthropic/mock-large 240→25 tok $0.00110 692ms
+                  ↳ [tool_use lookup_order {&quot;order_id&quot;:&quot;ORD-1021&quot;}]
++    7ms  TOOL   lookup_order({&quot;order_id&quot;:&quot;ORD-1021&quot;}) → {&quot;order_id&quot;:&quot;ORD-1021&quot;,&quot;item&quot;:&quot;desk lamp&quot;,&quot;status&quot;:&quot;processing&quot;,&quot;amount&quot;:19,&quot;et… 1ms
++   13ms  MODEL  anthropic/mock-large 325→28 tok $0.00139 471ms
+                  ↳ [tool_use issue_refund {&quot;order_id&quot;:&quot;ORD-1021&quot;,&quot;amount&quot;:19}]
++   15ms  EVENT  approval {&quot;auto&quot;:true,&quot;amount&quot;:19}
++   16ms  TOOL   issue_refund({&quot;order_id&quot;:&quot;ORD-1021&quot;,&quot;amount&quot;:19}) → {&quot;refund_id&quot;:&quot;RF-1&quot;,&quot;order_id&quot;:&quot;ORD-1021&quot;,&quot;amount&quot;:19} 1ms
++   26ms  MODEL  anthropic/mock-large 402→15 tok $0.00143 414ms
+                  ↳ I have refunded $19 for ORD-1021.
++   29ms  END    ok output=I have refunded $19 for ORD-1021.</pre></div></div></details><details><summary><span class="pill bad">regressed</span> <code>damaged-2</code> 100.0% → 0.0% <span class="mut">ticket</span></summary><p class="bad">tool_accuracy: expected tool lookup_order was not called; expected tool create_ticket was not called<br>answer_checks: answer does not contain &quot;ticket&quot;<br>outcome: outcome &quot;ticket_created&quot; not satisfied by final state</p><div class="cols"><div><b>baseline</b><pre>Run 78fd8268-532b-4e5c-9ea1-4a00394d458d  [ok]  59ms
++    0ms  RUN    case=damaged-2 trial=0 input=My coffee grinder from order ORD-1014 arrived broken.
++    9ms  MODEL  anthropic/mock-large 285→25 tok $0.00123 543ms
+                  ↳ [tool_use lookup_order {&quot;order_id&quot;:&quot;ORD-1014&quot;}]
++   33ms  TOOL   lookup_order({&quot;order_id&quot;:&quot;ORD-1014&quot;}) → {&quot;order_id&quot;:&quot;ORD-1014&quot;,&quot;item&quot;:&quot;coffee grinder&quot;,&quot;status&quot;:&quot;shipped&quot;,&quot;amount&quot;:120,… 6ms
++   41ms  MODEL  anthropic/mock-large 372→42 tok $0.00175 827ms
+                  ↳ [tool_use create_ticket {&quot;order_id&quot;:&quot;ORD-1014&quot;,&quot;issue&quot;:&quot;My coffee grinder from order ORD-1014 arrived broken.&quot;}]
++   47ms  TOOL   create_ticket({&quot;order_id&quot;:&quot;ORD-1014&quot;,&quot;issue&quot;:&quot;My coffee grinder from order ORD-1014 arrived b…) → {&quot;ticket_id&quot;:&quot;TCK-1&quot;,&quot;order_id&quot;:&quot;ORD-1014&quot;,&quot;issue&quot;:&quot;My coffee grinder from orde… 0ms
++   53ms  MODEL  anthropic/mock-large 476→26 tok $0.00182 532ms
+                  ↳ I am sorry about your coffee grinder. I created ticket TCK-1 for ORD-1014.
++   59ms  END    ok output=I am sorry about your coffee grinder. I created ticket TCK-1 for ORD-1014.</pre></div><div><b>candidate</b><pre>Run f7d32f06-d209-4151-8bbc-3a1c4b573c40  [ok]  6ms
++    0ms  RUN    case=damaged-2 trial=0 input=My coffee grinder from order ORD-1014 arrived broken.
++    4ms  MODEL  anthropic/mock-large 242→21 tok $0.00104 452ms
+                  ↳ Your order ORD-1014 is on its way and will arrive soon.
++    6ms  END    ok output=Your order ORD-1014 is on its way and will arrive soon.</pre></div></div></details><details><summary><span class="pill bad">regressed</span> <code>damaged-3</code> 100.0% → 0.0% <span class="mut">ticket</span></summary><p class="bad">tool_accuracy: expected tool lookup_order was not called; expected tool create_ticket was not called<br>answer_checks: answer does not contain &quot;ticket&quot;<br>outcome: outcome &quot;ticket_created&quot; not satisfied by final state</p><div class="cols"><div><b>baseline</b><pre>Run 6e1e360e-fc33-4d1a-89f9-ecd12218ec56  [ok]  32ms
++    0ms  RUN    case=damaged-3 trial=0 input=My backpack from order ORD-1015 arrived broken.
++    2ms  MODEL  anthropic/mock-large 284→25 tok $0.00123 691ms
+                  ↳ [tool_use lookup_order {&quot;order_id&quot;:&quot;ORD-1015&quot;}]
++    6ms  TOOL   lookup_order({&quot;order_id&quot;:&quot;ORD-1015&quot;}) → {&quot;order_id&quot;:&quot;ORD-1015&quot;,&quot;item&quot;:&quot;backpack&quot;,&quot;status&quot;:&quot;delivered&quot;,&quot;amount&quot;:22,&quot;eta&quot;… 1ms
++   10ms  MODEL  anthropic/mock-large 369→40 tok $0.00171 844ms
+                  ↳ [tool_use create_ticket {&quot;order_id&quot;:&quot;ORD-1015&quot;,&quot;issue&quot;:&quot;My backpack from order ORD-1015 arrived broken.&quot;}]
++   14ms  TOOL   create_ticket({&quot;order_id&quot;:&quot;ORD-1015&quot;,&quot;issue&quot;:&quot;My backpack from order ORD-1015 arrived broken.…) → {&quot;ticket_id&quot;:&quot;TCK-1&quot;,&quot;order_id&quot;:&quot;ORD-1015&quot;,&quot;issue&quot;:&quot;My backpack from order ORD-… 1ms
++   16ms  MODEL  anthropic/mock-large 470→24 tok $0.00177 644ms
+                  ↳ I am sorry about your backpack. I created ticket TCK-1 for ORD-1015.
++   32ms  END    ok output=I am sorry about your backpack. I created ticket TCK-1 for ORD-1015.</pre></div><div><b>candidate</b><pre>Run 98d16650-5774-4a41-8028-1ad4ea215767  [ok]  5ms
++    0ms  RUN    case=damaged-3 trial=0 input=My backpack from order ORD-1015 arrived broken.
++    3ms  MODEL  anthropic/mock-large 241→21 tok $0.00104 475ms
+                  ↳ Your order ORD-1015 is on its way and will arrive soon.
++    5ms  END    ok output=Your order ORD-1015 is on its way and will arrive soon.</pre></div></div></details><details><summary><span class="pill good">improved</span> <code>kb-8</code> 66.7% → 100.0% <span class="mut">knowledge</span></summary><div class="cols"><div><b>baseline</b><pre>Run a6055bfa-34c3-4ab6-80d0-7a15b289e8f7  [ok]  53ms
++    0ms  RUN    case=kb-8 trial=0 input=What are your contact hours?
++    6ms  MODEL  anthropic/mock-large 279→28 tok $0.00126 433ms
+                  ↳ [tool_use search_kb {&quot;query&quot;:&quot;What are your contact hours?&quot;}]
++   19ms  TOOL   search_kb({&quot;query&quot;:&quot;What are your contact hours?&quot;}) → [{&quot;id&quot;:&quot;kb-contact&quot;,&quot;text&quot;:&quot;Support is available Monday to Friday, 9am to 5pm, … 11ms
++   28ms  RETR   &quot;What are your contact hours?&quot; → [kb-contact:1]
++   45ms  MODEL  anthropic/mock-large 372→36 tok $0.00166 744ms
+                  ↳ Here is what our policy says: &quot;Support is available Monday to Friday, 9am to 5pm, by chat or email.&quot; [kb-contact]
++   53ms  END    ok output=Here is what our policy says: &quot;Support is available Monday to Friday, 9am to 5pm, by chat or email.&quot; [kb-contact]</pre></div><div><b>candidate</b><pre>Run 8b0474f0-5de6-46fe-802c-f4adaffacc06  [ok]  15ms
++    0ms  RUN    case=kb-8 trial=0 input=What are your contact hours?
++    3ms  MODEL  anthropic/mock-large 236→28 tok $0.00113 684ms
+                  ↳ [tool_use search_kb {&quot;query&quot;:&quot;What are your contact hours?&quot;}]
++    7ms  TOOL   search_kb({&quot;query&quot;:&quot;What are your contact hours?&quot;}) → [{&quot;id&quot;:&quot;kb-contact&quot;,&quot;text&quot;:&quot;Support is available Monday to Friday, 9am to 5pm, … 2ms
++    9ms  RETR   &quot;What are your contact hours?&quot; → [kb-contact:1]
++   12ms  MODEL  anthropic/mock-large 329→36 tok $0.00153 488ms
+                  ↳ Here is what our policy says: &quot;Support is available Monday to Friday, 9am to 5pm, by chat or email.&quot; [kb-contact]
++   15ms  END    ok output=Here is what our policy says: &quot;Support is available Monday to Friday, 9am to 5pm, by chat or email.&quot; [kb-contact]</pre></div></div></details>
+<p class="mut">Flaky cases: baseline 4, candidate 1.</p></main></body></html>

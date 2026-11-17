@@ -1,0 +1,63 @@
+{
+  "generated": "2026-11-17T16:39:37.384Z",
+  "node": "v22.22.3",
+  "simulated": true,
+  "dataset_cases": 40,
+  "experiment": "cost of rigor and savings from replay",
+  "by_trials": [
+    {
+      "trials": 1,
+      "model_calls": 87,
+      "simulated_spend_usd": 0.12524099999999996,
+      "simulated_sequential_model_time_s": 53.724,
+      "harness_wall_clock_ms": 356
+    },
+    {
+      "trials": 3,
+      "model_calls": 264,
+      "simulated_spend_usd": 0.38128199999999995,
+      "simulated_sequential_model_time_s": 161.236,
+      "harness_wall_clock_ms": 354
+    },
+    {
+      "trials": 5,
+      "model_calls": 438,
+      "simulated_spend_usd": 0.631545,
+      "simulated_sequential_model_time_s": 265.855,
+      "harness_wall_clock_ms": 556
+    },
+    {
+      "trials": 10,
+      "model_calls": 876,
+      "simulated_spend_usd": 1.2632819999999998,
+      "simulated_sequential_model_time_s": 533.922,
+      "harness_wall_clock_ms": 1342
+    }
+  ],
+  "relative_to_single_run": [
+    {
+      "trials": 1,
+      "spend_multiple": 1
+    },
+    {
+      "trials": 3,
+      "spend_multiple": 3.0443864229765016
+    },
+    {
+      "trials": 5,
+      "spend_multiple": 5.042637794332529
+    },
+    {
+      "trials": 10,
+      "spend_multiple": 10.086808632955663
+    }
+  ],
+  "replay": {
+    "live_model_calls_when_recording": 262,
+    "live_model_calls_when_replaying": 0,
+    "simulated_spend_of_recording_usd": 0.37805399999999995,
+    "spend_of_replay_usd": 0,
+    "replay_harness_wall_clock_ms": 758
+  },
+  "note": "Spend and model time are simulated from mock token counts and the default price table. Multi-trial cost scales linearly with trials by construction; the experiment documents the multiple and the exact zero live calls in replay. Real latency/cost not measured."
+}

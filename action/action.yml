@@ -1,0 +1,77 @@
+name: Tracegate check
+description: Replay-mode regression check for AI agents. Fails the build on a statistically meaningful regression and posts a Markdown PR comment.
+inputs:
+  agent:
+    description: Path to the agent module (default-exports (input, tg) => answer)
+    required: true
+  dataset:
+    description: Dataset file (defaults to `dataset` in the config)
+    required: false
+  baseline:
+    description: Committed baseline name (see `tracegate baseline update`)
+    required: true
+  cassette:
+    description: Recorded run set to replay (replay mode is free and deterministic). Leave empty for a live run.
+    required: false
+  trials:
+    description: Trials per case
+    default: "3"
+  config:
+    description: Tracegate config file
+    required: false
+  working-directory:
+    description: Directory to run in
+    default: "."
+  comment:
+    description: Post a PR comment ("true" or "false")
+    default: "true"
+  tracegate-bin:
+    description: Command that runs the CLI
+    default: "npx tracegate"
+runs:
+  using: composite
+  steps:
+    - name: Run Tracegate
+      id: run
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set +e
+        CFG=""; [ -n "${{ inputs.config }}" ] && CFG="-c ${{ inputs.config }}"
+        DS=""; [ -n "${{ inputs.dataset }}" ] && DS="--dataset ${{ inputs.dataset }}"
+        if [ -n "${{ inputs.cassette }}" ]; then
+          ${{ inputs.tracegate-bin }} $CFG replay --cassette "${{ inputs.cassette }}" --agent "${{ inputs.agent }}" --name candidate --trials ${{ inputs.trials }} $DS
+        else
+          ${{ inputs.tracegate-bin }} $CFG run --agent "${{ inputs.agent }}" --name candidate --trials ${{ inputs.trials }} $DS
+        fi
+        ${{ inputs.tracegate-bin }} $CFG check --baseline "${{ inputs.baseline }}" --candidate candidate --out tracegate-comment.md --html tracegate-report.html
+        echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+    - name: Upload report
+      uses: actions/upload-artifact@v4
+      with:
+        name: tracegate-report
+        path: |
+          ${{ inputs.working-directory }}/tracegate-report.html
+          ${{ inputs.working-directory }}/tracegate-comment.md
+    - name: Comment on pull request
+      if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          const body = fs.readFileSync(path.join('${{ inputs.working-directory }}', 'tracegate-comment.md'), 'utf8');
+          const marker = '<!-- tracegate-report -->';
+          const { owner, repo } = context.repo;
+          const issue_number = context.issue.number;
+          const all = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+          const mine = all.find((c) => c.body && c.body.includes(marker));
+          const full = marker + '\n' + body;
+          if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body: full });
+          else await github.rest.issues.createComment({ owner, repo, issue_number, body: full });
+    - name: Fail if the gate failed
+      shell: bash
+      if: ${{ steps.run.outputs.exit_code != '0' }}
+      run: |
+        echo "Tracegate gate failed (exit ${{ steps.run.outputs.exit_code }})"
+        exit 1

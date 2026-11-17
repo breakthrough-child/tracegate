@@ -1,0 +1,56 @@
+{
+  "generated": "2026-11-17T16:48:14.903Z",
+  "node": "v22.22.3",
+  "simulated": true,
+  "dataset_cases": 40,
+  "experiment": "false regressions between identical agents",
+  "replications": 300,
+  "trials_for_tracegate": 5,
+  "noise_per_call": 0.05,
+  "naive_any_drop_single_run": {
+    "k": 113,
+    "n": 300,
+    "rate": 0.37666666666666665,
+    "ci95": [
+      0.3237194319344521,
+      0.43273261413165603
+    ]
+  },
+  "naive_drop_over_2pts_single_run": {
+    "k": 113,
+    "n": 300,
+    "rate": 0.37666666666666665,
+    "ci95": [
+      0.3237194319344521,
+      0.43273261413165603
+    ]
+  },
+  "tracegate_1_trial_paired_bootstrap": {
+    "k": 6,
+    "n": 300,
+    "rate": 0.02,
+    "ci95": [
+      0.009197506067771087,
+      0.042940186730055147
+    ]
+  },
+  "tracegate_5_trials_paired_bootstrap": {
+    "k": 8,
+    "n": 300,
+    "rate": 0.02666666666666667,
+    "ci95": [
+      0.013572906766976815,
+      0.051729540297546284
+    ]
+  },
+  "mcnemar_exact_p_lt_0_05_5_trials": {
+    "k": 0,
+    "n": 300,
+    "rate": 0,
+    "ci95": [
+      0,
+      0.012643429997735661
+    ]
+  },
+  "note": "Both sides are the same agent with different random seeds, so every flagged regression is a false positive. Intervals are Wilson 95%."
+}

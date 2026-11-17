@@ -2,6 +2,9 @@ node_modules
 dist
 *.tsbuildinfo
 .tracegate/
+!examples/support-agent/.tracegate/
+examples/support-agent/.tracegate/runs/*
+!examples/support-agent/.tracegate/runs/support-agent/
 __pycache__
 *.pyc
 .DS_Store

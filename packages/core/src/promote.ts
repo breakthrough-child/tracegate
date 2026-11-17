@@ -29,7 +29,9 @@ export function promoteRun(run: Run, o: PromoteOptions = {}): Case {
   if (o.forbidTools?.length) expected.forbidden_tools = o.forbidTools;
   if (o.behavior) expected.behavior = o.behavior;
   if (!Object.keys(expected).length) {
-    throw new Error('Refusing to promote a case with no expectations: pass --expect-same, --answer-contains, --forbid-tool or --behavior to state the expected behaviour.');
+    throw new Error(
+      'Refusing to promote a case with no expectations: pass --expect-same, --answer-contains, --forbid-tool or --behavior to state the expected behaviour.',
+    );
   }
   c.expected = expected;
   return c;

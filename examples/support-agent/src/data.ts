@@ -5,7 +5,18 @@ export interface Order {
   amount: number;
   eta: string;
 }
-const items = ['desk lamp', 'headphones', 'yoga mat', 'coffee grinder', 'backpack', 'keyboard', 'water bottle', 'monitor stand', 'phone case', 'blender'];
+const items = [
+  'desk lamp',
+  'headphones',
+  'yoga mat',
+  'coffee grinder',
+  'backpack',
+  'keyboard',
+  'water bottle',
+  'monitor stand',
+  'phone case',
+  'blender',
+];
 const statuses: Order['status'][] = ['processing', 'shipped', 'delivered', 'delayed'];
 /** 30 deterministic orders: ORD-1001 .. ORD-1030 */
 export const ORDERS: Order[] = Array.from({ length: 30 }, (_, i) => ({
@@ -31,7 +42,8 @@ export const KB: Doc[] = [
   { id: 'kb-contact', text: 'Support is available Monday to Friday, 9am to 5pm, by chat or email.' },
 ];
 
-export const tokens = (s: string): string[] => s.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+const stem = (t: string): string => t.replace(/(ing|ed|s)$/, '');
+export const tokens = (s: string): string[] => (s.toLowerCase().match(/[a-z0-9]+/g) ?? []).map(stem);
 export function searchKb(query: string, k = 3): (Doc & { score: number })[] {
   const q = new Set(tokens(query).filter((t) => t.length > 3));
   return KB.map((d) => ({ ...d, score: tokens(d.text + ' ' + d.id).filter((t) => q.has(t)).length }))

@@ -52,7 +52,16 @@ export const DEFAULT_CONFIG: Required<Pick<TracegateConfig, 'dir' | 'tolerance' 
 };
 
 export async function loadConfig(path?: string, cwd = process.cwd()): Promise<TracegateConfig & typeof DEFAULT_CONFIG> {
-  const candidates = path ? [path] : ['tracegate.config.mjs', 'tracegate.config.js', 'tracegate.config.ts', 'tracegate.config.yaml', 'tracegate.config.yml', 'tracegate.config.json'];
+  const candidates = path
+    ? [path]
+    : [
+        'tracegate.config.mjs',
+        'tracegate.config.js',
+        'tracegate.config.ts',
+        'tracegate.config.yaml',
+        'tracegate.config.yml',
+        'tracegate.config.json',
+      ];
   for (const c of candidates) {
     const f = resolve(cwd, c);
     if (!existsSync(f)) continue;
@@ -64,7 +73,10 @@ export async function loadConfig(path?: string, cwd = process.cwd()): Promise<Tr
         const mod = await import(pathToFileURL(f).href);
         cfg = mod.default ?? mod.config ?? {};
       } catch (e) {
-        throw new Error(`Could not load ${f}: ${(e as Error).message}${f.endsWith('.ts') ? ' (.ts configs need a TS loader such as tsx; use .mjs or .yaml otherwise)' : ''}`);
+        throw new Error(
+          `Could not load ${f}: ${(e as Error).message}${f.endsWith('.ts') ? ' (.ts configs need a TS loader such as tsx; use .mjs or .yaml otherwise)' : ''}`,
+          { cause: e },
+        );
       }
     }
     return { ...DEFAULT_CONFIG, ...cfg };

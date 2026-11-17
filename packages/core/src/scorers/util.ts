@@ -69,7 +69,11 @@ export function deepEqual(a: unknown, b: unknown): boolean {
 function sortKeys(v: unknown): unknown {
   if (Array.isArray(v)) return v.map(sortKeys);
   if (v && typeof v === 'object') {
-    return Object.fromEntries(Object.keys(v).sort().map((k) => [k, sortKeys((v as Record<string, unknown>)[k])]));
+    return Object.fromEntries(
+      Object.keys(v)
+        .sort()
+        .map((k) => [k, sortKeys((v as Record<string, unknown>)[k])]),
+    );
   }
   return v;
 }

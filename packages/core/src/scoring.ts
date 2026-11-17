@@ -1,5 +1,4 @@
 import { BUILTIN_SCORERS, trajectoryOf, type Judge, type Scorer, type ScoreContext } from './scorers/index.js';
-import { rubricHash } from './scorers/judge.js';
 import type { TracegateConfig } from './config.js';
 import type { Case, CaseResult, Run, RunsetResults, ScorerResult, TrialResult } from './types.js';
 import type { Store } from './store.js';
@@ -23,8 +22,13 @@ function chunkResolver(cfg: TracegateConfig, c: Case, run: Run): (id: string) =>
 export async function scoreRun(c: Case, run: Run, cfg: TracegateConfig, judge?: Judge): Promise<TrialResult> {
   const scorers: Scorer[] = [...BUILTIN_SCORERS, ...(cfg.scorers ?? [])];
   const ctx: ScoreContext = {
-    case: c, run, judge, safety: cfg.safety ?? [], outcomes: cfg.outcomes ?? {},
-    chunkText: chunkResolver(cfg, c, run), required: cfg.required ?? {},
+    case: c,
+    run,
+    judge,
+    safety: cfg.safety ?? [],
+    outcomes: cfg.outcomes ?? {},
+    chunkText: chunkResolver(cfg, c, run),
+    required: cfg.required ?? {},
   };
   const results: ScorerResult[] = [];
   for (const s of scorers) {
@@ -50,9 +54,18 @@ export async function scoreRun(c: Case, run: Run, cfg: TracegateConfig, judge?: 
   const t = trajectoryOf(run);
   const sim = !!run.meta.simulated;
   return {
-    trial: run.trial, run_id: run.run_id, pass: failures.length === 0, status: run.status, scores,
-    failures, safety_violations, steps: t.steps, tokens: t.tokens, cost_usd: t.cost_usd,
-    latency_ms: t.latency_ms, simulated_latency: sim || undefined,
+    trial: run.trial,
+    run_id: run.run_id,
+    pass: failures.length === 0,
+    status: run.status,
+    scores,
+    failures,
+    safety_violations,
+    steps: t.steps,
+    tokens: t.tokens,
+    cost_usd: t.cost_usd,
+    latency_ms: t.latency_ms,
+    simulated_latency: sim || undefined,
   };
 }
 
@@ -69,12 +82,14 @@ export async function scoreRunset(store: Store, cases: Case[], runs: Run[], o: S
     out.push({ case_id: c.id, category: c.category, tags: c.tags ?? [], trials });
   }
   const res: RunsetResults = {
-    name: o.name, created: new Date().toISOString(), dataset: o.dataset,
+    name: o.name,
+    created: new Date().toISOString(),
+    dataset: o.dataset,
     meta: { ...(store.readManifest(o.name) ?? {}), ...(o.meta ?? {}) },
     judge: o.judge ? { model: o.judge.model, temperature: o.judge.temperature } : undefined,
     cases: out,
   };
-  void rubricHash;
+
   store.writeResults(o.name, res);
   return res;
 }
@@ -86,13 +101,26 @@ export function caseMetric(c: CaseResult, metric: string): number | null {
   for (const t of c.trials) {
     let v: number | null | undefined;
     switch (metric) {
-      case 'task_success': v = t.pass ? 1 : 0; break;
-      case 'cost_usd': v = t.cost_usd; break;
-      case 'latency_ms': v = t.latency_ms; break;
-      case 'tokens': v = t.tokens; break;
-      case 'steps': v = t.steps; break;
-      case 'failure_rate': v = t.pass ? 0 : 1; break;
-      default: v = t.scores[metric];
+      case 'task_success':
+        v = t.pass ? 1 : 0;
+        break;
+      case 'cost_usd':
+        v = t.cost_usd;
+        break;
+      case 'latency_ms':
+        v = t.latency_ms;
+        break;
+      case 'tokens':
+        v = t.tokens;
+        break;
+      case 'steps':
+        v = t.steps;
+        break;
+      case 'failure_rate':
+        v = t.pass ? 0 : 1;
+        break;
+      default:
+        v = t.scores[metric];
     }
     if (v !== null && v !== undefined && !Number.isNaN(v)) vals.push(v);
   }

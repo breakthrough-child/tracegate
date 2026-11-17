@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { binomCdf, bootstrapCI, classifyDiff, cohenKappa, isFlaky, logChoose, mcnemarExact, mean, pairedBootstrap, passAtK, quantile, stdev, wilson } from '../src/index.js';
+import {
+  binomCdf,
+  bootstrapCI,
+  classifyDiff,
+  cohenKappa,
+  isFlaky,
+  logChoose,
+  mcnemarExact,
+  mean,
+  pairedBootstrap,
+  passAtK,
+  quantile,
+  stdev,
+  wilson,
+} from '../src/index.js';
 
 describe('descriptive statistics', () => {
   it('mean, sd, quantile match hand values', () => {
@@ -37,9 +51,18 @@ describe('exact tests', () => {
 
 describe('agreement and pass@k', () => {
   it("Cohen's kappa reference (po=.7, pe=.5 -> .4)", () => {
-    const a: string[] = [], b: string[] = [];
-    const add = (x: string, y: string, n: number) => { for (let i = 0; i < n; i++) { a.push(x); b.push(y); } };
-    add('y', 'y', 20); add('y', 'n', 5); add('n', 'y', 10); add('n', 'n', 15);
+    const a: string[] = [],
+      b: string[] = [];
+    const add = (x: string, y: string, n: number) => {
+      for (let i = 0; i < n; i++) {
+        a.push(x);
+        b.push(y);
+      }
+    };
+    add('y', 'y', 20);
+    add('y', 'n', 5);
+    add('n', 'y', 10);
+    add('n', 'n', 15);
     const k = cohenKappa(a, b);
     expect(k.agreement).toBeCloseTo(0.7, 10);
     expect(k.kappa).toBeCloseTo(0.4, 10);
