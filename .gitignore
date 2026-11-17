@@ -9,3 +9,13 @@ __pycache__
 *.pyc
 .DS_Store
 tmp-out/
+
+tracegate-*.html
+tracegate-comment.md
+.env
+.env.*
+!.env.example
+*.log
+.vscode/
+.idea/
+Tracegate_prompt_v2.md

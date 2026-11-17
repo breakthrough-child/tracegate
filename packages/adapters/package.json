@@ -8,7 +8,7 @@
   "types": "dist/index.d.ts",
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
   "files": ["dist", "README.md"],
-  "repository": { "type": "git", "url": "git+https://github.com/OWNER/tracegate.git" },
+  "repository": { "type": "git", "url": "git+https://github.com/breakthrough-child/tracegate.git" },
   "publishConfig": { "access": "public" },
   "engines": { "node": ">=20" },
   "dependencies": { "@tracegate/core": "workspace:*" }

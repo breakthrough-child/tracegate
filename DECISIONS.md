@@ -25,5 +25,7 @@ One line each: decision, why.
 - Config `.ts` files need a TS loader; the docs say so and recommend `.mjs`/`.yaml`.
 - Prices in `DEFAULT_PRICES` are illustrative and stale on purpose; users override them.
 - Dashboard is one static HTML file with inline JS/SVG (no framework, no build step, no external requests); comparisons are precomputed for the latest 8 run sets; traces embedded for the first 200 runs only to keep the file small.
-- Packages are publish-ready (`files`, `exports`, `publishConfig`) but not published; steps in README. Repository URL placeholders (`OWNER`) need replacing.
+- Packages are publish-ready (`files`, `exports`, `publishConfig`) but not published; steps in README. Repository URLs point at github.com/breakthrough-child/tracegate.
 - No outside users, stars or testimonials are claimed anywhere; `docs/FEEDBACK_LOG.md` is an empty template.
+- Release prep: `Tracegate_prompt_v2.md` (the build prompt) is not part of the repo; untracked and git-ignored. Git author email rewritten to the GitHub noreply address so no personal email is in public history.
+- Quick start writes its HTML report under `.tracegate/` so a clean checkout stays lint-clean after following the README.

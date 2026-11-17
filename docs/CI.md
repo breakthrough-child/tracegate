@@ -12,7 +12,7 @@ Replay proves that code around the model still works and that prompts/tool schem
 
 ## GitHub Action (`action/action.yml`)
 ```yaml
-- uses: OWNER/tracegate/action@v0
+- uses: breakthrough-child/tracegate/action@v0
   with:
     agent: dist/agent.js
     dataset: tracegate/dataset.yaml
@@ -20,7 +20,7 @@ Replay proves that code around the model still works and that prompts/tool schem
     cassette: main-recording  # run set committed in .tracegate/runs/
     trials: "3"
 ```
-Needs `permissions: pull-requests: write` for the comment. The comment is updated in place on each push. A full workflow is in `.github/workflows/tracegate-pr.example.yml`. This repository's own `ci.yml` runs the support-agent example in CI with no API key and **asserts that the broken variant fails the gate**.
+Needs `permissions: pull-requests: write` for the comment. The comment is updated in place on each push. A full workflow is in `docs/examples/tracegate-pr.example.yml`. This repository's own `ci.yml` runs the support-agent example in CI with no API key and **asserts that the broken variant fails the gate**.
 
 ## Baselines
 `tracegate baseline update <run-set> [--name main]` copies the scored `results.json` into `tracegate/baselines/<name>/` (or `baselines` from the config). Commit it. The file is small, diff-able JSON, so a baseline change is reviewable in a pull request like any snapshot. Update baselines deliberately: accepting a lower baseline is how regressions get laundered.

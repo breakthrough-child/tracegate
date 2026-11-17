@@ -1,6 +1,6 @@
 # Tracegate
 
-[![CI](https://github.com/OWNER/tracegate/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/tracegate/actions/workflows/ci.yml)
+[![CI](https://github.com/breakthrough-child/tracegate/actions/workflows/ci.yml/badge.svg)](https://github.com/breakthrough-child/tracegate/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Record AI agent runs, replay them deterministically, score them, and fail CI when a change makes the agent measurably worse.**
@@ -26,7 +26,7 @@ SUPPORT_VARIANT=good $tg run --agent $E --name base --trials 3
 SUPPORT_VARIANT=prompt SUPPORT_SEED=7 $tg run --agent $E --name candidate --trials 3
 $tg check --baseline base --candidate candidate
 # 3. look at it
-$tg compare base candidate --html report.html        # self-contained HTML
+$tg compare base candidate --html .tracegate/report.html   # self-contained HTML
 $tg ui                                                # local dashboard on http://127.0.0.1:4173
 $tg view candidate/refund-1                           # one trace as a timeline
 # 4. free, deterministic replay of the recording (fails with a diff if requests drifted)
@@ -142,7 +142,6 @@ What to take from this, within its limits: the large win over a naive comparison
 
 ## Publishing (not done; exact steps)
 ```bash
-# replace OWNER in package.json repository URLs and README badges first
 pnpm install && pnpm build && pnpm exec vitest run
 for p in core adapters report cli; do (cd packages/$p && pnpm publish --dry-run --access public); done   # inspect
 # then, in this order, for real (needs an npm login and the @tracegate scope):

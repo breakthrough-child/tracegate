@@ -18,7 +18,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OWNER/tracegate.git"
+    "url": "git+https://github.com/breakthrough-child/tracegate.git"
   },
   "publishConfig": {
     "access": "public"

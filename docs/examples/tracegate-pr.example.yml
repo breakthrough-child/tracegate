@@ -11,7 +11,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm ci && npm run build
-      - uses: OWNER/tracegate/action@v0
+      - uses: breakthrough-child/tracegate/action@v0
         with:
           agent: dist/agent.js
           dataset: tracegate/dataset.yaml
