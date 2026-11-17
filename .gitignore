@@ -1,0 +1,8 @@
+node_modules
+dist
+*.tsbuildinfo
+.tracegate/
+__pycache__
+*.pyc
+.DS_Store
+tmp-out/

@@ -1,0 +1,39 @@
+{
+  "name": "@tracegate/cli",
+  "version": "0.1.0",
+  "description": "The tracegate command line interface",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OWNER/tracegate.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@tracegate/core": "workspace:*",
+    "@tracegate/adapters": "workspace:*",
+    "@tracegate/report": "workspace:*",
+    "commander": "^12.1.0",
+    "yaml": "^2.6.0"
+  },
+  "bin": {
+    "tracegate": "dist/bin.js"
+  }
+}

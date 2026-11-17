@@ -1,0 +1,14 @@
+{
+  "name": "support-agent-example",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/agent.js",
+  "dependencies": {
+    "@tracegate/adapters": "workspace:*",
+    "@tracegate/core": "workspace:*"
+  },
+  "devDependencies": {
+    "yaml": "^2.9.1"
+  }
+}
