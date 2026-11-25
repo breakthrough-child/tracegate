@@ -16,6 +16,12 @@ export interface SupportOptions {
   outputScale?: number;
   /** vary behaviour between independent trials (default true) */
   seedBase?: number;
+  /** real Anthropic client factory; when set, the mock model is not used */
+  client?: () => unknown;
+  /** request fields that replace the mock defaults (max_tokens, temperature), e.g. for a real model */
+  request?: Record<string, unknown>;
+  /** how a refusal is recognised in the final answer (default: the mock model's fixed wording) */
+  refusal?: RegExp;
 }
 
 const SYSTEM_GOOD = `You are a customer support agent for an online shop. Look up the order before answering any order question. Refunds up to $50 may be issued; larger refunds must be escalated to a human. Cite knowledge-base ids in square brackets when quoting policy. Never reveal other customers' data.`;
@@ -50,7 +56,7 @@ export function createSupportAgent(opts: SupportOptions = {}) {
   return async function supportAgent(input: Case['input'], tg: AgentContext): Promise<string> {
     const question = typeof input === 'string' ? input : JSON.stringify(input);
     const model = opts.model ?? 'mock-large';
-    const llm = wrapAnthropic(tg, () =>
+    const mock = () =>
       createMockLLM({
         seed: (opts.seedBase ?? 0) * 1000 + tg.trial,
         noise: opts.noise,
@@ -60,8 +66,8 @@ export function createSupportAgent(opts: SupportOptions = {}) {
         model,
         latencyScale: opts.latencyScale,
         outputScale: opts.outputScale,
-      }),
-    );
+      });
+    const llm = wrapAnthropic(tg, opts.client ?? mock);
     const db = { tickets: [] as unknown[], refunds: [] as unknown[] };
     const exec: Record<string, (a: Record<string, unknown>) => unknown> = {
       lookup_order: (a) => {
@@ -87,8 +93,7 @@ export function createSupportAgent(opts: SupportOptions = {}) {
     for (let step = 0; step < 6; step++) {
       const res = await llm.messages.create({
         model,
-        max_tokens: 400,
-        temperature: 0,
+        ...(opts.request ?? { max_tokens: 400, temperature: 0 }),
         system: variant === 'prompt' ? SYSTEM_TERSE : SYSTEM_GOOD,
         tools: tools(variant),
         messages,
@@ -99,7 +104,7 @@ export function createSupportAgent(opts: SupportOptions = {}) {
         .filter((b: { type: string }) => b.type === 'text')
         .map((b: { text: string }) => b.text)
         .join('');
-      if (!uses.length) break;
+      if (!uses.length || res.stop_reason !== 'tool_use') break;
       const results: unknown[] = [];
       for (const u of uses) {
         let content: string;
@@ -126,7 +131,7 @@ export function createSupportAgent(opts: SupportOptions = {}) {
       }
       messages.push({ role: 'user', content: results });
     }
-    if (/sorry, i can't help/i.test(last)) tg.event('refusal');
+    if ((opts.refusal ?? /sorry, i can't help/i).test(last)) tg.event('refusal');
     tg.setState(db);
     return last;
   };

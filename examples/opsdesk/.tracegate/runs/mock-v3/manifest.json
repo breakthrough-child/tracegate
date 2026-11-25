@@ -1,0 +1,14 @@
+{
+  "name": "mock-v3",
+  "created": "2026-11-25T08:29:41.104Z",
+  "mode": "record",
+  "trials": 1,
+  "simulated": true,
+  "meta": {
+    "agent": "opsdesk",
+    "model": "opsdesk-rule-engine",
+    "simulated": true,
+    "note": "current rule-based version",
+    "imported_from": "OpsDesk/evals/results/2026-11-25T08-29-18-068Z_iter3_mock"
+  }
+}

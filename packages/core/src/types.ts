@@ -194,6 +194,6 @@ export interface RunsetResults {
   created: string;
   dataset?: string;
   meta: Record<string, unknown>;
-  judge?: { model: string; temperature: number; rubric_hash?: string };
+  judge?: { model: string; temperature?: number; rubric_hash?: string };
   cases: CaseResult[];
 }

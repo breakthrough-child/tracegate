@@ -4,7 +4,8 @@ import { answerText, na, retrievals, type Scorer } from './util.js';
 /** Anything that can answer a prompt. Implementations live in adapters (HTTP) and in simulations. */
 export interface Judge {
   model: string;
-  temperature: number;
+  /** undefined when the provider default is used (current Claude models reject a custom temperature) */
+  temperature?: number;
   complete(system: string, user: string): Promise<string>;
 }
 

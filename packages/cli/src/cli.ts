@@ -18,6 +18,9 @@ import {
   check,
   calibrateJudge,
   promoteRun,
+  buildLabelSheet,
+  readLabelSheet,
+  type CalibrationItem,
   sampleRuns,
   runToOtlp,
   otlpToRuns,
@@ -296,39 +299,101 @@ export async function main(argv: string[]): Promise<void> {
     });
 
   const jc = program.command('judge').description('judge tools');
+  jc.command('sheet')
+    .description('write a blind CSV labelling sheet (empty verdict columns) from recorded runs, plus a separate key file')
+    .requiredOption('--runsets <names>', 'comma-separated run sets (trial 0 of each case is used)')
+    .requiredOption('--rubrics <file>', 'YAML map of case id -> rubric')
+    .option('--dataset <file>')
+    .option('--out <file>', '', 'labels.csv')
+    .option('--key <file>', 'where to write the item -> run key (default: <out>.key.json)')
+    .option('-n <n>', 'maximum number of rows', '40')
+    .option('--seed <n>', '', '1')
+    .action(async (o: { runsets: string; rubrics: string; dataset?: string; out: string; key?: string; n: string; seed: string }) => {
+      const { cfg, store } = await ctx();
+      const keyFile = o.key ?? o.out.replace(/\.csv$/, '') + '.key.json';
+      if (existsSync(o.out)) {
+        const { items } = readLabelSheet(readFileSync(o.out, 'utf8'));
+        if (items.length) throw new Error(`${o.out} already contains ${items.length} human verdict(s); refusing to overwrite it`);
+      }
+      const sheet = buildLabelSheet(
+        o.runsets.split(',').map((name) => ({ name, runs: store.loadRuns(name) })),
+        loadDataset(datasetOf(cfg, o)),
+        YAML.parse(readFileSync(o.rubrics, 'utf8')) as Record<string, string>,
+        { n: Number(o.n), seed: Number(o.seed) },
+      );
+      write(o.out, sheet.csv);
+      write(keyFile, JSON.stringify(sheet.key, null, 2));
+      sheet.skipped.forEach((x) => console.error('skipped ' + x));
+      console.log(
+        `${sheet.key.length} rows. Fill human_verdict with pass or fail, then: tracegate judge calibrate --labels ${o.out} --judge <spec>`,
+      );
+    });
   jc.command('calibrate')
     .description("compare judge verdicts with human labels (percent agreement, Cohen's kappa)")
+    .option('--labels <csv>', 'completed sheet from `judge sheet` (otherwise labels come from the dataset)')
     .option('--dataset <file>')
-    .requiredOption('--runset <name>')
-    .option('--judge <spec>')
+    .option('--runset <name>', 'run set to read answers from (not needed with --labels)')
+    .option('--judge <spec>', 'e.g. anthropic:claude-haiku-5-5, or simulated:0.5 to test the pipeline for free')
+    .option('--limit <n>', 'only the first n labelled items')
+    .option('--dry-run', 'check the labels and report counts without calling the judge')
     .option('--json <file>')
-    .action(async (o: { dataset?: string; runset: string; judge?: string; json?: string }) => {
-      const { cfg, store } = await ctx();
-      const judge = judgeFromEnv(o.judge);
-      if (!judge) throw new Error('No judge available: set ANTHROPIC_API_KEY or OPENAI_API_KEY, or pass --judge provider:model');
-      const cases = loadDataset(datasetOf(cfg, o));
-      const runs = new Map(
-        store
-          .loadRuns(o.runset)
-          .filter((r) => r.trial === 0)
-          .map((r) => [r.case_id, r]),
-      );
-      const items = cases
-        .filter((c) => c.labels?.human && c.expected?.answer?.judge && runs.has(c.id))
-        .map((c) => ({
-          id: c.id,
-          rubric: c.expected!.answer!.judge!,
-          question: String(c.input),
-          answer: typeof runs.get(c.id)!.output === 'string' ? (runs.get(c.id)!.output as string) : JSON.stringify(runs.get(c.id)!.output),
-          human: c.labels!.human!,
-        }));
-      const rep = await calibrateJudge(judge, items);
-      console.log(
-        `judge ${rep.judge.model} (temperature ${rep.judge.temperature}) on ${rep.n} human-labelled items\nagreement ${(rep.agreement * 100).toFixed(1)}%  kappa ${rep.kappa.toFixed(3)}\nconfusion ${JSON.stringify(rep.confusion)}`,
-      );
-      rep.warnings.forEach((w) => console.log('warning: ' + w));
-      if (o.json) write(o.json, JSON.stringify(rep, null, 2));
-    });
+    .action(
+      async (o: {
+        labels?: string;
+        dataset?: string;
+        runset?: string;
+        judge?: string;
+        limit?: string;
+        dryRun?: boolean;
+        json?: string;
+      }) => {
+        let items: CalibrationItem[];
+        let blank = 0;
+        if (o.labels) ({ items, blank } = readLabelSheet(readFileSync(o.labels, 'utf8')));
+        else {
+          if (!o.runset) throw new Error('Pass --labels <csv>, or --runset <name> with labels in the dataset');
+          const { cfg, store } = await ctx();
+          const cases = loadDataset(datasetOf(cfg, o));
+          const runs = new Map(
+            store
+              .loadRuns(o.runset)
+              .filter((r) => r.trial === 0)
+              .map((r) => [r.case_id, r]),
+          );
+          items = cases
+            .filter((c) => c.labels?.human && c.expected?.answer?.judge && runs.has(c.id))
+            .map((c) => ({
+              id: c.id,
+              rubric: c.expected!.answer!.judge!,
+              question: String(c.input),
+              answer:
+                typeof runs.get(c.id)!.output === 'string' ? (runs.get(c.id)!.output as string) : JSON.stringify(runs.get(c.id)!.output),
+              human: c.labels!.human!,
+            }));
+        }
+        if (o.limit) items = items.slice(0, Number(o.limit));
+        const pass = items.filter((i) => i.human === 'pass').length;
+        console.log(
+          `${items.length} labelled item(s): ${pass} pass, ${items.length - pass} fail${blank ? `; ${blank} blank row(s) skipped` : ''}`,
+        );
+        if (o.dryRun) return;
+        if (!items.length) throw new Error('No human labels found: fill in the human_verdict column first');
+        const judge = judgeFromEnv(o.judge);
+        if (!judge) throw new Error('No judge available: set ANTHROPIC_API_KEY or OPENAI_API_KEY, or pass --judge provider:model');
+        const rep = await calibrateJudge(judge, items);
+        const simulated = judge.model.startsWith('simulated');
+        console.log(
+          `judge ${rep.judge.model} (temperature ${rep.judge.temperature ?? 'provider default'}) on ${rep.n} labelled items\nagreement ${(rep.agreement * 100).toFixed(1)}%  kappa ${rep.kappa.toFixed(3)}\nconfusion ${JSON.stringify(rep.confusion)}`,
+        );
+        if (simulated) console.log('SIMULATED JUDGE: these numbers only show that the pipeline runs.');
+        rep.warnings.forEach((w) => console.log('warning: ' + w));
+        if (o.json)
+          write(
+            o.json,
+            JSON.stringify({ generated: new Date().toISOString(), labels: o.labels, simulated_judge: simulated, ...rep }, null, 2),
+          );
+      },
+    );
 
   program
     .command('view <trace>')

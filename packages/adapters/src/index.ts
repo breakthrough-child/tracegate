@@ -106,24 +106,40 @@ export interface JudgeOptions {
   model: string;
   apiKey?: string;
   baseUrl?: string;
+  /** Anthropic: sent only when set, because current Claude models reject a non-default temperature. */
   temperature?: number;
+  /** Anthropic `output_config.effort`; sent only when set. */
+  effort?: 'low' | 'medium' | 'high';
+  maxTokens?: number;
+  /** Called with the token usage of each successful call. */
+  onUsage?: (u: { input_tokens: number; output_tokens: number }) => void;
 }
 
 export function anthropicJudge(o: JudgeOptions): Judge {
-  const temperature = o.temperature ?? 0;
   return {
     model: o.model,
-    temperature,
+    temperature: o.temperature,
     async complete(system, user) {
       const key = o.apiKey ?? process.env.ANTHROPIC_API_KEY;
       if (!key) throw new Error('ANTHROPIC_API_KEY is not set (needed for the Anthropic judge)');
       const res = await fetch((o.baseUrl ?? 'https://api.anthropic.com') + '/v1/messages', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: o.model, max_tokens: 400, temperature, system, messages: [{ role: 'user', content: user }] }),
+        body: JSON.stringify({
+          model: o.model,
+          max_tokens: o.maxTokens ?? 2000,
+          temperature: o.temperature,
+          output_config: o.effort ? { effort: o.effort } : undefined,
+          system,
+          messages: [{ role: 'user', content: user }],
+        }),
       });
       if (!res.ok) throw new Error(`Anthropic judge error ${res.status}: ${await res.text()}`);
-      const j = (await res.json()) as { content: { type: string; text?: string }[] };
+      const j = (await res.json()) as {
+        content: { type: string; text?: string }[];
+        usage?: { input_tokens: number; output_tokens: number };
+      };
+      if (j.usage) o.onUsage?.(j.usage);
       return j.content
         .filter((c) => c.type === 'text')
         .map((c) => c.text)
@@ -159,9 +175,26 @@ export function openaiJudge(o: JudgeOptions): Judge {
   };
 }
 
+/**
+ * A fake judge for testing pipelines without an API key: a deterministic coin flip on the prompt text (pass rate `p`).
+ * Its verdicts mean nothing. Any report made with it must be labelled simulated.
+ */
+export function simulatedJudge(p = 0.5): Judge {
+  return {
+    model: `simulated(p=${p})`,
+    async complete(_system, user) {
+      let h = 2166136261;
+      for (let i = 0; i < user.length; i++) h = Math.imul(h ^ user.charCodeAt(i), 16777619);
+      const verdict = ((h >>> 0) % 1000) / 1000 < p ? 'pass' : 'fail';
+      return JSON.stringify({ verdict, reasoning: 'simulated judge: verdict has no meaning' });
+    },
+  };
+}
+
 /** Pick a judge from environment variables, or undefined when none is configured. */
 export function judgeFromEnv(spec?: string): Judge | undefined {
   const [provider, model] = (spec ?? '').split(':');
+  if (provider === 'simulated') return simulatedJudge(model ? Number(model) : undefined);
   if (provider === 'anthropic' || (!spec && process.env.ANTHROPIC_API_KEY)) return anthropicJudge({ model: model || 'claude-sonnet-4-5' });
   if (provider === 'openai' || (!spec && process.env.OPENAI_API_KEY))
     return openaiJudge({ model: model || 'gpt-4o-mini', baseUrl: process.env.OPENAI_BASE_URL });

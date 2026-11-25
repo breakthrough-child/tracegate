@@ -14,6 +14,8 @@ export * from './scoring.js';
 export * from './compare.js';
 export * from './check.js';
 export * from './calibrate.js';
+export * from './csv.js';
+export * from './labels.js';
 export * from './promote.js';
 export * from './otel.js';
 export * from './scorers/index.js';

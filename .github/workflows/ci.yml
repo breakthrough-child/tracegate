@@ -6,9 +6,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
@@ -20,9 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile && pnpm build
       - name: Replay-mode gate on the unchanged agent (must pass)
@@ -37,10 +37,28 @@ jobs:
         env: { SUPPORT_VARIANT: prompt }
       - name: Build the dashboard bundle
         run: node packages/cli/dist/bin.js -c examples/support-agent/tracegate.config.mjs ui --export tracegate-dashboard.html
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tracegate-example-reports
           path: |
             tracegate-comment.md
             tracegate-report.html
             tracegate-dashboard.html
+  opsdesk-example:
+    # Dogfood: recorded OpsDesk eval runs (committed), scored and gated with no API key and no network.
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile && pnpm build
+      - name: Score the recorded run sets
+        run: |
+          for s in mock-v1 mock-v3 real-haiku; do node packages/cli/dist/bin.js -c examples/opsdesk/tracegate.config.mjs score $s; done
+      - name: The unchanged version passes against its baseline
+        run: node packages/cli/dist/bin.js -c examples/opsdesk/tracegate.config.mjs check --baseline opsdesk-mock-v3 --candidate mock-v3
+      - name: The older, worse version must be caught (passes only when the gate FAILS)
+        run: |
+          if node packages/cli/dist/bin.js -c examples/opsdesk/tracegate.config.mjs check --baseline opsdesk-mock-v3 --candidate mock-v1; then echo "gate should have failed"; exit 1; fi

@@ -47,7 +47,7 @@ runs:
         ${{ inputs.tracegate-bin }} $CFG check --baseline "${{ inputs.baseline }}" --candidate candidate --out tracegate-comment.md --html tracegate-report.html
         echo "exit_code=$?" >> "$GITHUB_OUTPUT"
     - name: Upload report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: tracegate-report
         path: |
@@ -55,7 +55,7 @@ runs:
           ${{ inputs.working-directory }}/tracegate-comment.md
     - name: Comment on pull request
       if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         script: |
           const fs = require('fs');

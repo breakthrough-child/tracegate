@@ -1,0 +1,14 @@
+{
+  "name": "mock-v1",
+  "created": "2026-11-17T16:35:13.318Z",
+  "mode": "record",
+  "trials": 1,
+  "simulated": true,
+  "meta": {
+    "agent": "opsdesk",
+    "model": "opsdesk-rule-engine",
+    "simulated": true,
+    "note": "first rule-based version (keyword retrieval, no rerank)",
+    "imported_from": "OpsDesk/evals/results/2026-11-17T16-34-27-266Z_baseline"
+  }
+}

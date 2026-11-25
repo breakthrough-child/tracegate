@@ -1,0 +1,14 @@
+{
+  "name": "real-haiku",
+  "created": "2026-11-25T08:55:08.389Z",
+  "mode": "record",
+  "trials": 1,
+  "simulated": false,
+  "meta": {
+    "agent": "opsdesk",
+    "model": "claude-haiku-5-5",
+    "simulated": false,
+    "note": "claude-haiku-5-5, one trial, run by OpsDesk",
+    "imported_from": "OpsDesk/evals/results/2026-11-25T08-44-30-545Z_real"
+  }
+}

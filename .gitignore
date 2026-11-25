@@ -3,6 +3,8 @@ dist
 *.tsbuildinfo
 .tracegate/
 !examples/support-agent/.tracegate/
+!examples/opsdesk/.tracegate/
+examples/opsdesk/.tracegate/runs/*/results.json
 examples/support-agent/.tracegate/runs/*
 !examples/support-agent/.tracegate/runs/support-agent/
 __pycache__

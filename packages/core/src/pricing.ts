@@ -9,6 +9,7 @@ export type PriceTable = Record<string, Price>;
 /** Example default prices. They go stale: override them in tracegate.config for real cost figures. */
 export const DEFAULT_PRICES: PriceTable = {
   'claude-sonnet-4': { input: 3, output: 15 },
+  'claude-haiku-5-5': { input: 0.1, output: 0.5 },
   'claude-haiku-4': { input: 1, output: 5 },
   'gpt-4o-mini': { input: 0.15, output: 0.6 },
   'gpt-4o': { input: 2.5, output: 10 },

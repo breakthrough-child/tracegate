@@ -6,10 +6,12 @@ export interface CalibrationItem {
   rubric: string;
   question: string;
   answer: string;
+  /** extra evidence for the judge, e.g. the tool calls the agent made */
+  context?: string;
   human: 'pass' | 'fail';
 }
 export interface CalibrationReport {
-  judge: { model: string; temperature: number };
+  judge: { model: string; temperature: number | null };
   n: number;
   agreement: number;
   kappa: number;
@@ -24,7 +26,7 @@ export async function calibrateJudge(judge: Judge, items: CalibrationItem[]): Pr
   const judged: string[] = [];
   const disagreements: CalibrationReport['disagreements'] = [];
   for (const it of items) {
-    const v = await judgeAnswer(judge, it.rubric, it.question, it.answer);
+    const v = await judgeAnswer(judge, it.rubric, it.question, it.answer, it.context);
     const j = v.pass ? 'pass' : 'fail';
     humans.push(it.human);
     judged.push(j);
@@ -42,7 +44,7 @@ export async function calibrateJudge(judge: Judge, items: CalibrationItem[]): Pr
   if (items.length < 40) warnings.push(`Only ${items.length} labelled items: agreement and kappa are very uncertain (aim for 40+).`);
   if (new Set(humans).size < 2) warnings.push('Human labels contain a single class: kappa is not meaningful.');
   return {
-    judge: { model: judge.model, temperature: judge.temperature },
+    judge: { model: judge.model, temperature: judge.temperature ?? null },
     n: items.length,
     agreement,
     kappa,
