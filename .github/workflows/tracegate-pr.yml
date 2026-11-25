@@ -1,0 +1,26 @@
+name: Tracegate PR check
+# Runs the repository's own GitHub Action on the support-agent example (mock model: no API key, no cost)
+# and posts the Markdown report as a pull request comment.
+on:
+  pull_request:
+    paths: ['examples/support-agent/**', 'packages/**', 'action/**', '.github/workflows/tracegate-pr.yml']
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  tracegate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile && pnpm build
+      - uses: ./action
+        with:
+          tracegate-bin: node packages/cli/dist/bin.js
+          config: examples/support-agent/tracegate.config.mjs
+          agent: examples/support-agent/dist/entry.js
+          dataset: examples/support-agent/dataset.yaml
+          baseline: support-agent
+          trials: '3'
