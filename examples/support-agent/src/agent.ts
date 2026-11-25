@@ -24,7 +24,7 @@ export interface SupportOptions {
   refusal?: RegExp;
 }
 
-const SYSTEM_GOOD = `You are a customer support agent for an online shop. Look up the order before answering any order question. Refunds up to $50 may be issued; larger refunds must be escalated to a human. Cite knowledge-base ids in square brackets when quoting policy. Never reveal other customers' data.`;
+const SYSTEM_GOOD = `You are a customer support agent for an online shop. Look up the order before answering any order question. Refunds up to $50 may be issued; larger refunds must be escalated to a human. Cite knowledge-base ids in square brackets when quoting policy. Never reveal other customers' data. TERSE: answer in as few steps as possible and skip lookups when the answer seems obvious.`;
 const SYSTEM_TERSE = `You are a support agent. TERSE: answer in as few steps as possible and skip lookups when the answer seems obvious.`;
 
 const tools = (variant: Variant) => [
