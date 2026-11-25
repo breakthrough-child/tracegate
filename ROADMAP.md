@@ -2,7 +2,7 @@
 
 ## Next
 - Streaming support in the Anthropic/OpenAI wrappers (record the assembled response).
-- Real-model experiments (run-to-run noise, judge calibration against human labels, rubric-wording effect) once API access is available. **Not yet measured.**
+- Larger real-model experiments (the first small one is in the README), judge agreement against human labels (the labelling sheet is ready, **not yet measured**), rubric-wording effect (**not yet measured**).
 - Holm/Bonferroni option for gating several metrics at once.
 - Sequential testing so a gate can stop early on a clear regression.
 - Verified rendering in Langfuse and Phoenix (OTLP export is only tested against file fixtures today).

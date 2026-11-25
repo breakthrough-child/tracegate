@@ -97,16 +97,17 @@ Exit `1` on: any safety violation; a metric under its absolute threshold; a budg
 
 ![overview](docs/img/dashboard-overview.png)
 
-The "PR comment" screenshot is not included because no real pull request has been opened; the Markdown it would post is in `docs/samples/`.
+Real PR comment: a deliberately worse prompt was opened as PR #1 against this repository; the GitHub Action failed the gate and the bot posted the comment saved in [docs/samples/pr-comment-github-action.md](docs/samples/pr-comment-github-action.md). The PR was closed without merging.
 
 ## Adapters
 - **TypeScript**: `wrapAnthropic`, `wrapOpenAI` (also any OpenAI-compatible base URL), `wrapModel` (any async function), `wrapTools`, `wrapMcpClient`. Streaming is not supported yet.
 - **Python** (`python/tracegate-py`, not published): `Recorder`, `wrap_anthropic`, `wrap_openai`; same JSONL and redaction. `tracegate record --name py -- python3 agent.py` then `tracegate score py --dataset d.yaml`. Tested: the CLI scores a Python-recorded trace ([e2e test](packages/cli/test/e2e.test.ts)). Not tested against the real Anthropic/OpenAI Python SDKs (only a fake client).
+- **OpsDesk dogfood** ([examples/opsdesk](examples/opsdesk)): scores recorded runs of a real customer-ops agent from saved outputs (no API key); the gate catches a revert from `mock-v3` to `mock-v1` (task success 0.874 → 0.703, CI −0.252 to −0.090, 111 cases, 1 trial). Those traces cannot be strictly replayed.
 - **OpenTelemetry**: `tracegate otel export` (OTLP/JSON, GenAI semantic conventions) and `tracegate otel import` (GenAI and OpenInference-style attributes). Tested with file fixtures only; **not verified in Langfuse or Phoenix**.
 
 ## Failure modes and limitations
 - Replay verifies the code around the model and detects request drift; it **cannot** tell whether a changed prompt makes the real model worse. That needs a live re-run (costs money) and the statistics above.
-- Judges are fallible and unverified until calibrated against human labels; unparseable judge output counts as a failure. No real judge has been evaluated in this repository (no API key was available).
+- Judges are fallible and unverified until calibrated against human labels; unparseable judge output counts as a failure. The only real-judge result here is a 10-item agreement with rule-based scorers; agreement with humans is not yet measured (the labelling sheet awaits your labels).
 - Small datasets give wide intervals; the tool says so rather than guessing. The 40-case example cannot detect a 1-2 case change.
 - Non-deterministic tools (time, randomness, network) can break strict replay of tool-dependent requests: stub them in the agent.
 - No streaming capture; no concurrency-aware latency modelling; trace files can be large with full request bodies.
@@ -136,6 +137,23 @@ Everything here is from the **simulated** support agent (rule-based mock model, 
 | 6 | Budget gates under noise | With identical agents and a 5% tolerance (150 pairs): a naive single-run check fired on mean cost in 3.3% (1.4–7.6%) and on p95 latency in 13.3% (8.8–19.7%) of pairs; Tracegate's paired check (5 trials) fired 0/150 on both (upper 95% bound 2.5%). With injected output-token increases (60 replications each): at a real +1.3% / +3.0% cost increase (below tolerance) naive fired 10% / 25% vs Tracegate 0% / 3%; at +7.1%, naive 87% vs Tracegate 98%; at +14% and +28% both 100%. Cost noise here is small (slips only), so naive false-alarm rates on real models are likely higher: not measured. | `e6-budgets.json` |
 
 What to take from this, within its limits: the large win over a naive comparison comes from the **paired test**, not from extra trials (1-trial Tracegate was already at ~2%). Extra trials mattered for **power** on large regressions, not on small ones: with 40 cases, a ~7-point drop was missed more than half the time even at 10 trials, because case-sampling variance, not trial noise, dominates. More cases help more than more trials past ~3–5. These conclusions come from one simulated agent and one noise model and may not transfer.
+
+### Real-model run (claude-haiku-5-5), separate from the simulated results above
+One small run with a real model, to see whether the simulated picture survives contact with one. **Sample: 20 of the 40 cases (every second case, fixed before any call) × 3 trials × 2 prompt variants = 120 trial-runs** (60 per variant, 0 dropped). With a sample this small the statistics are weak: only large differences can be detected and every interval is wide. Raw traces, ledger and analysis: [`experiments/results/e7-real-model.json`](experiments/results/e7-real-model.json), `e7-real/`, `e7-ledger.jsonl`; script: `experiments/e7-real-model.ts`.
+
+| | baseline prompt | worsened prompt (told to skip lookups, policy rules removed) |
+|---|---|---|
+| pass rate | 40/60 = 66.7% | 36/60 = 60.0% |
+| pass rate by trial (the 3 "runs") | 14/20, 13/20, 13/20 | 13/20, 11/20, 12/20 |
+| run-to-run sd of the pass rate (3 runs only) | 0.029 | 0.050 |
+| flaky cases (pass in some trials, fail in others) | 2 (`refund-1`, `legal-3`) | 3 (`damaged-1`, `damaged-5`, `legal-3`) |
+| safety violations | 0 | 0 |
+
+- **Did the paired test detect the worsened prompt? No.** Paired difference in task success: −0.067 (95% CI −0.283 to +0.133, p = 0.58); exact McNemar 4 cases regressed / 1 improved, p = 0.375; verdict `no significant change`; the gate did **not** fail. A naive "did the pass rate drop?" rule would have fired in all three single trials (0.70→0.65, 0.65→0.55, 0.65→0.60). The data neither confirm nor rule out a real effect of a few points; there are signs of one (3 of 4 knowledge-base cases lost their citations under the worsened prompt) but 20 cases cannot establish it.
+- **The baseline itself only passes 67%** on this dataset with the real model, far below the mock's ~96%. The dataset was written for the mock agent and has not been audited against what a real model reasonably does (always-failing baseline cases include `damaged-1/3/5`, where the model did not call `create_ticket`, and `legal-1`, no escalation call). So the absolute level says little about the model; I have not investigated these failures.
+- **Cost (upper bound, from API-reported tokens at the list price $0.10/$0.50 per Mtok):** total **$0.0393** for 278 calls (smoke test $0.0016, 120 trial-runs $0.0369, judge $0.0008; 227,787 input and 31,209 output tokens; one failed call counted at its worst case). About $0.0003 per trial-run. Budget cap was $0.35, enforced by a ledger-backed guard.
+- **Judge (10 items, alternating baseline/worse answers):** the Haiku judge agreed with Tracegate's rule-based scorers on 10 of 10 (it passed 7). This is agreement with the *scorers*, not with humans, and 10 items is too few for a rate. **Human-label agreement and Cohen's kappa: not yet measured.** A 40-row blind labelling sheet of these real answers is ready in [`docs/labelling/`](docs/labelling) (see [docs/LABELLING.md](docs/LABELLING.md)); nobody has filled it in.
+- Limits: one model, one day, one worsened prompt, one synthetic dataset, 3 runs per variant (so the noise estimate is itself rough). Not measured: other models, larger samples, rubric-wording effects.
 
 ## Users and adoption
 **No outside users yet.** No one other than the author has tried Tracegate. [`docs/FEEDBACK_LOG.md`](docs/FEEDBACK_LOG.md) is an empty template to be filled with real feedback.

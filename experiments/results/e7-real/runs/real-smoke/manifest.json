@@ -1,0 +1,14 @@
+{
+  "name": "real-smoke",
+  "created": "2026-11-25T20:09:52.966Z",
+  "dataset": "examples/support-agent/dataset.yaml",
+  "mode": "live",
+  "trials": 1,
+  "simulated": false,
+  "meta": {
+    "agent": "support-agent",
+    "model": "claude-haiku-5-5",
+    "prompt_version": "good",
+    "simulated": false
+  }
+}

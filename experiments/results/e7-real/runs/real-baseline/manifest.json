@@ -1,0 +1,14 @@
+{
+  "name": "real-baseline",
+  "created": "2026-11-25T20:10:14.437Z",
+  "dataset": "examples/support-agent/dataset.yaml",
+  "mode": "live",
+  "trials": 3,
+  "simulated": false,
+  "meta": {
+    "agent": "support-agent",
+    "model": "claude-haiku-5-5",
+    "prompt_version": "good",
+    "simulated": false
+  }
+}
